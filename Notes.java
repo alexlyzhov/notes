@@ -8,13 +8,10 @@ import javax.swing.border.*;
 public class Notes extends JFrame {
 	private JList<Note> notesList;
 	private Vector<Note> notesData;
-	private Rectangle lastBounds;
 	public NotesDatabase notesDatabase;
-	private SettingsDatabase settingsDatabase;
 
 	public Notes() {
 		notesDatabase = new NotesDatabase();
-		settingsDatabase = new SettingsDatabase();
 		String title = "Notes";
 		setTitle(title);
 		setIconImage(new ImageIcon(Main.SUN_ICO).getImage());
@@ -25,8 +22,6 @@ public class Notes extends JFrame {
 		});
 		setDefaultCloseOperation(HIDE_ON_CLOSE); //change it to HIDE_ON_CLOSE as soon as I will develop hotkeys and tray
 		setNewBounds();
-		setBoundsListener();
-
 		setLayout(new BorderLayout());
 		initNewButton();
 		initList();
@@ -34,28 +29,9 @@ public class Notes extends JFrame {
 	}
 
 	private void setNewBounds() { //it does not work here
-		Rectangle newBounds = settingsDatabase.readBounds();
-		if(newBounds == null) {
-			Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-			setLocation(0, (int) (screen.getHeight() * 0.2));
-			setSize(new Dimension(500, (int) (screen.getHeight() * 0.6)));
-		} else {
-			setBounds(newBounds);
-			if(Boolean.parseBoolean(settingsDatabase.get("BoundsMaximized"))) setExtendedState(MAXIMIZED_BOTH);
-		}
-	}
-
-	private void setBoundsListener() {
-		addComponentListener(new ComponentListener() {
-			public void componentResized(ComponentEvent e) {writeBoundsField();}
-			public void componentMoved(ComponentEvent e) {writeBoundsField();}
-			public void componentShown(ComponentEvent e) {writeBoundsField();}
-			public void componentHidden(ComponentEvent e) {}
-		});
-	}
-
-	private void writeBoundsField() {
-		if(getExtendedState() != MAXIMIZED_BOTH) lastBounds = getBounds();
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation(0, (int) (screen.getHeight() * 0.2));
+		setSize(new Dimension(500, (int) (screen.getHeight() * 0.6)));
 	}
 
 	private void initNewButton() {
@@ -151,19 +127,11 @@ public class Notes extends JFrame {
 		notesList.setListData(notesDatabase.getNotesList()); //consider the problem with Note duplicates
 	}
 
-	private void writeBounds() {
-		settingsDatabase.writeBounds(lastBounds);
-		if(getExtendedState() == MAXIMIZED_BOTH) settingsDatabase.set("BoundsMaximized", "true");
-		else settingsDatabase.set("BoundsMaximized", "false");
-	}
-
 	private void closeDatabases() {
-		notesDatabase.close();
-		settingsDatabase.close();
+		notesDatabase.closeQueue();
 	}
 
 	public void cleanUp() {
-		writeBounds();
 		closeDatabases();
 	}
 }

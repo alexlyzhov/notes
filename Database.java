@@ -1,8 +1,6 @@
 import java.sql.*;
 
 public class Database {
-	protected Connection con;  //in further development I should make the work with connection safe by creating destructors
-	private Statement st;
 
 	protected void connect(String fileName) {
 		try {

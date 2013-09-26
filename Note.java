@@ -18,6 +18,8 @@ public class Note {
 		this.content = content;
 	}
 
+	public Note() {}
+
 	public void update(Note another) {
 		this.name = another.name;
 		this.content = another.content;

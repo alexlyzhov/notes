@@ -1,56 +1,117 @@
-import java.sql.*;
+import com.almworks.sqlite4java.*;
 import java.util.ArrayList;
+import java.io.File;
 
-public class NotesDatabase extends Database {
+public class NotesDatabase {
+	private SQLiteQueue queue;
+	// private SQLiteConnection con;
 
 	public NotesDatabase() {
-		connect("notes.db");
-		initTable();
+		initQueue();
+		createTable();
 	}
 
-	private void initTable() {
-		executeUpdate("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, name VARCHAR, content TEXT, time TEXT)");
+	private void initQueue() {
+		queue = new SQLiteQueue(new File("notes.db"));
+		queue.start();
 	}
 
-	public void newNote(Note note) {
-		try {
-			PreparedStatement prst = con.prepareStatement("INSERT INTO Notes (name, content, time) VALUES (?, ?, datetime('now'))");
-			// executeUpdate("INSERT INTO Notes (name, content, time) VALUES ('" + note.name + "', '" + note.content + "', datetime('now'))");
-			prst.setString(1, note.name); prst.setString(2, note.content);
-			prst.executeUpdate();
-			ResultSet result = executeQuery("SELECT last_insert_rowid() as id FROM Notes");
-			result.next();
-			note.setID(result.getInt("id"));
-		} catch(SQLException ex) {ex.printStackTrace();}
+	// private void open() {
+	// 	File file = new File("notes.db");
+	// 	con = new SQLiteConnection(file);
+	// 	try {
+	// 		con.open();
+	// 	} catch(SQLiteException ex) {ex.printStackTrace();}
+	// }
+
+	private void createTable() {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+		        try {
+		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, name VARCHAR, content TEXT, time TEXT)");
+		        	st.step(); //stepThrough();
+		        } catch(SQLiteException ex) {ex.printStackTrace();}
+		        finally {if(st != null) st.dispose();}
+		        //varchar/text difference, primary key usage
+		        return null;
+		    }
+		});
 	}
 
-	public void updateNote(Note note) {
-		try {
-			PreparedStatement prst = con.prepareStatement("UPDATE Notes SET name = ?, content = ?, time = datetime('now') WHERE id = ?");
-			prst.setString(1, note.name); prst.setString(2, note.content); prst.setInt(3, note.getID());
-			prst.executeUpdate();
-		} catch(SQLException ex) {ex.printStackTrace();}
-		// executeUpdate("UPDATE Notes SET name = '" + note.name + "', content = '" + note.content + "', time = datetime('now') WHERE id = " + note.getID());
+	public void newNote(final Note note) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("INSERT INTO Notes (name, content, time) VALUES (?, ?, datetime('now'))");
+	    			st.bind(1, note.name); st.bind(2, note.content);
+	    			st.step(); //stepThrough();
+	    			note.setID((int) con.getLastInsertId());
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		});		
 	}
 
-	public void removeNote(Note note) {
-		executeUpdate("DELETE FROM Notes WHERE id = " + note.getID());
+	public void updateNote(final Note note) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = datetime('now') WHERE id = ?");
+	    			st.bind(1, note.name); st.bind(2, note.content); st.bind(3, note.getID());
+	    			st.step();
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		});
+	}
+
+	public void removeNote(final Note note) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+		        try {
+		        	st = con.prepare("DELETE FROM Notes WHERE id = ?");
+		        	st.bind(1, note.getID());
+		        	st.step();
+		        } catch(SQLiteException ex) {ex.printStackTrace();}
+		        finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		});		
 	}
 
 	public Note[] getNotesList() {
-		ArrayList<Note> notes = new ArrayList<Note>();
-		ResultSet notesSet = null;
-		notesSet = executeQuery("SELECT * FROM Notes ORDER BY time DESC");
-		try {
-			while(notesSet.next()) {
-				notes.add(readNote(notesSet));
-			}
-		} catch(SQLException ex) {ex.printStackTrace();}
-		return notes.toArray(new Note[notes.size()]);
+		final ArrayList<Note> notes = new ArrayList<Note>();
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+		        try {
+		        	st = con.prepare("SELECT * FROM Notes ORDER BY time DESC");
+		        	while(st.step()) {
+		        		Note note = new Note();
+		        		note.setID(st.columnInt(0)); //fix this private and public fields scructure
+		        		note.name = st.columnString(1);
+		        		note.content = st.columnString(2);
+		        		notes.add(note);
+		        	}
+		        } catch(SQLiteException ex) {ex.printStackTrace();}
+		        finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		}).complete();
+        return notes.toArray(new Note[notes.size()]);
 	}
 
-	private Note readNote(ResultSet set) throws SQLException { //serialization/deserialization of Note objects - implement
-		Note note = new Note(set.getInt("id"), set.getString("name"), set.getString("content"));
-		return note;
+	public void closeQueue() {
+		if(queue != null) {
+			try {
+				queue.stop(true).join();
+			} catch(InterruptedException ex) {ex.printStackTrace();}
+		}
 	}
 }

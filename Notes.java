@@ -1,104 +1,104 @@
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import javax.swing.border.*;
+// import javax.swing.*;
+// import javax.swing.event.*;
+// import java.awt.*;
+// import java.awt.event.*;
+// import javax.swing.border.*;
 
-public class Notes extends JFrame {
-	private JList<Note> notesList;
+import com.trolltech.qt.gui.*; //exact classes
+import java.util.*;
+
+public class Notes extends QWidget {
+	// private JList<Note> notesList;
 	private Vector<Note> notesData;
 	public NotesDatabase notesDatabase;
 
+	public static void main(String args[]) {
+		QApplication.initialize(args);
+		QApplication.setQuitOnLastWindowClosed(true);
+		Notes notes = new Notes();
+		QApplication.exec();
+		new Keys(notes);
+	}
+
 	public Notes() {
 		notesDatabase = new NotesDatabase();
-		String title = "Notes";
-		setTitle(title);
-		setIconImage(new ImageIcon(Main.SUN_ICO).getImage());
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				
-			}
-		});
-		setDefaultCloseOperation(HIDE_ON_CLOSE); //change it to HIDE_ON_CLOSE as soon as I will develop hotkeys and tray
-		setNewBounds();
-		setLayout(new BorderLayout());
-		initNewButton();
-		initList();
-		// setVisible(true);
+		setWindowTitle("Notes");
+		setWindowIcon(new QIcon("ico/sun.png"));
+		QDesktopWidget screen = new QDesktopWidget();
+		move(200, (int) (screen.height() * 0.2));
+		resize(300, (int) (screen.height() * 0.6));
+		// initNewButton();
+		// initList();
+		show();
 	}
 
-	private void setNewBounds() { //it does not work here
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-		setLocation(0, (int) (screen.getHeight() * 0.2));
-		setSize(new Dimension(500, (int) (screen.getHeight() * 0.6)));
-	}
+	// private void initNewButton() {
+	// 	QPushButton button = new JButton("New note", this);
+	// 	//Main.getImageIcon(Main.EDIT_ICO, 16, 16)
+	// 	button.setGeometry(30, 30, 75, 30);
+	// 	button.clicked.connect() //to createNote()
+	// }
 
-	private void initNewButton() {
-		JButton newButton = new JButton("New note", Main.getImageIcon(Main.EDIT_ICO, 16, 16));
-		newButton.setFocusPainted(false);
-		newButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				createNote();
-			}
-		});
-		add(newButton, BorderLayout.PAGE_START);
+	// private void initList() {
+	// 	notesList = new JList<Note>();
+	// 	notesData = new Vector<Note>();
+
+	// 	class NoteListMouseListener extends MouseAdapter {
+	// 		public void mouseClicked(MouseEvent e) {
+	// 			Point point = e.getPoint();
+	// 			int index = notesList.locationToIndex(e.getPoint());
+	// 			if(notesList.getCellBounds(index, index).contains(point)) {
+	// 				Note element = (Note) notesList.getModel().getElementAt(index);
+	// 				switch(e.getButton()) {
+	// 					case MouseEvent.BUTTON1:
+	// 						if(!element.editing) newEditor(element);
+	// 						break;
+	// 					case MouseEvent.BUTTON2:
+	// 						if(!element.editing) {
+	// 							notesDatabase.removeNote(element); //only if it is available to remove
+	// 							updateList();
+	// 						}
+	// 						break;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+
+	// 	class NoteCellRenderer<Note> extends JLabel implements ListCellRenderer<Note> {
+	// 		public Component getListCellRendererComponent(JList<? extends Note> list, Note value, int index, boolean isSelected, boolean cellHasFocus) {
+	// 			String text = value.toString();
+	// 			if(text.equals("")) text = "Nameless";
+	// 			setText(text);
+	// 			if (isSelected) setBackground(list.getSelectionBackground());
+	// 			else setBackground(list.getBackground());
+	// 			setFont(list.getFont());
+	// 			setOpaque(true);
+	// 			return this;
+	// 		}
+	// 	}
+
+	// 	notesList.addMouseListener(new NoteListMouseListener());
+	// 	notesList.setCellRenderer(new NoteCellRenderer<Note>());
+
+	// 	updateList();
+	// 	add(notesList, BorderLayout.CENTER);
+
+	// 	JScrollPane scrollPane = new JScrollPane(notesList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	// 	add(scrollPane, BorderLayout.CENTER);
+	// }
+
+	public void toggleVisible() {
+		// setVisible(!isVisible());
+		System.out.println("toggleVisible(): not yet supported");
 	}
 
 	public void createNote() {
 		newEditor(null);
 	}
 
-	private void initList() {
-		notesList = new JList<Note>();
-		notesData = new Vector<Note>();
-
-		class NoteListMouseListener extends MouseAdapter {
-			public void mouseClicked(MouseEvent e) {
-				Point point = e.getPoint();
-				int index = notesList.locationToIndex(e.getPoint());
-				if(notesList.getCellBounds(index, index).contains(point)) {
-					Note element = (Note) notesList.getModel().getElementAt(index);
-					switch(e.getButton()) {
-						case MouseEvent.BUTTON1:
-							if(!element.editing) newEditor(element);
-							break;
-						case MouseEvent.BUTTON2:
-							if(!element.editing) {
-								notesDatabase.removeNote(element); //only if it is available to remove
-								updateList();
-							}
-							break;
-					}
-				}
-			}
-		}
-
-		class NoteCellRenderer<Note> extends JLabel implements ListCellRenderer<Note> {
-			public Component getListCellRendererComponent(JList<? extends Note> list, Note value, int index, boolean isSelected, boolean cellHasFocus) {
-				String text = value.toString();
-				if(text.equals("")) text = "Nameless";
-				setText(text);
-				if (isSelected) setBackground(list.getSelectionBackground());
-				else setBackground(list.getBackground());
-				setFont(list.getFont());
-				setOpaque(true);
-				return this;
-			}
-		}
-
-		notesList.addMouseListener(new NoteListMouseListener());
-		notesList.setCellRenderer(new NoteCellRenderer<Note>());
-
-		updateList();
-		add(notesList, BorderLayout.CENTER);
-
-		JScrollPane scrollPane = new JScrollPane(notesList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		add(scrollPane, BorderLayout.CENTER);
-	}
-
 	private void newEditor(Note noteParam) {
-		new Editor(this, noteParam);
+		// new Editor(this, noteParam);
+		System.out.println("Editor class is still in transition to qt");
 	}
 
 	public void updateList() {
@@ -124,7 +124,8 @@ public class Notes extends JFrame {
 		// 	notesData.remove(notesData.indexOf(oldNote));
 		// }
 		// notesList.setListData(notesData); //one time isn't enough, huh?
-		notesList.setListData(notesDatabase.getNotesList()); //consider the problem with Note duplicates
+
+		// notesList.setListData(notesDatabase.getNotesList()); //consider the problem with Note duplicates
 	}
 
 	private void closeDatabases() {

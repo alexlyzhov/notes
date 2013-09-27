@@ -13,7 +13,7 @@ public class Keys {
 			public void onHotkey(int id) {
 				switch(id) {
 					case LIST_ID:
-						notes.setVisible(!notes.isVisible());
+						notes.toggleVisible();
 						break;
 					case NEW_ID:
 						notes.createNote();

@@ -1,99 +1,84 @@
-// import javax.swing.*;
-// import javax.swing.event.*;
-// import java.awt.*;
-// import java.awt.event.*;
-// import javax.swing.border.*;
-
-import com.trolltech.qt.gui.*; //exact classes
-import java.util.*;
+import com.trolltech.qt.core.*;
+import com.trolltech.qt.gui.*;
 
 public class Notes extends QWidget {
-	// private JList<Note> notesList;
-	private Vector<Note> notesData;
-	public NotesDatabase notesDatabase;
+	private NotesData notesData;
+	private Keys keys;
+
+	private QListView list;
+	private QVBoxLayout layout;
 
 	public static void main(String args[]) {
 		QApplication.initialize(args);
-		QApplication.setQuitOnLastWindowClosed(true);
-		Notes notes = new Notes();
+		new Notes();
 		QApplication.exec();
-		new Keys(notes);
 	}
 
-	public Notes() {
-		notesDatabase = new NotesDatabase();
+	private Notes() {
+		notesData = new NotesData();
+		QApplication.setQuitOnLastWindowClosed(true);
+		init();
+		keys = new Keys(this);
+	}
+
+	public void init() {
 		setWindowTitle("Notes");
 		setWindowIcon(new QIcon("ico/sun.png"));
-		QDesktopWidget screen = new QDesktopWidget();
+
+		QDesktopWidget screen = new QDesktopWidget(); //replace it with system position/size determination
 		move(200, (int) (screen.height() * 0.2));
 		resize(300, (int) (screen.height() * 0.6));
-		// initNewButton();
-		// initList();
-		show();
+
+		QApplication.instance().lastWindowClosed.connect(this, "exit()");
+		layout = new QVBoxLayout(this);
+		initNewButton();
+		initList();
+
+		toggleVisible();
 	}
 
-	// private void initNewButton() {
-	// 	QPushButton button = new JButton("New note", this);
-	// 	//Main.getImageIcon(Main.EDIT_ICO, 16, 16)
-	// 	button.setGeometry(30, 30, 75, 30);
-	// 	button.clicked.connect() //to createNote()
-	// }
+	public void exit() {
+		notesData.exit();
+		keys.cleanUp();
+	}
 
-	// private void initList() {
-	// 	notesList = new JList<Note>();
-	// 	notesData = new Vector<Note>();
+	private void initNewButton() {
+		QPushButton button = new QPushButton(new QIcon("ico/edit.png"), "New note", this);
+		button.setFixedHeight(30);
+		layout.addWidget(button);
+		button.clicked.connect(this, "createNote()");
+	}
 
-	// 	class NoteListMouseListener extends MouseAdapter {
-	// 		public void mouseClicked(MouseEvent e) {
-	// 			Point point = e.getPoint();
-	// 			int index = notesList.locationToIndex(e.getPoint());
-	// 			if(notesList.getCellBounds(index, index).contains(point)) {
-	// 				Note element = (Note) notesList.getModel().getElementAt(index);
-	// 				switch(e.getButton()) {
-	// 					case MouseEvent.BUTTON1:
-	// 						if(!element.editing) newEditor(element);
-	// 						break;
-	// 					case MouseEvent.BUTTON2:
-	// 						if(!element.editing) {
-	// 							notesDatabase.removeNote(element); //only if it is available to remove
-	// 							updateList();
-	// 						}
-	// 						break;
-	// 				}
-	// 			}
+	private void initList() {
+		list = new QListView(this);
+		list.setModel(notesData);
+		// list.addScrollBarWidget(new QScrollBar(), Qt.AlignmentFlag.AlignTop);
+		list.activated.connect(this, "openNote(QModelIndex)");
+		// list.pressed.connect(this, "checkDelete()");
+		layout.addWidget(list);
+	}
+
+	// private void checkDelete() {
+	// 	if(QApplication.mouseButtons() & Qt.MouseButton.MidButton) {
+	// 		Note note = notesData.get(index);
+	// 		if(!note.editing) {
+	// 			notesData.remove(note);
+	// 			notesData.update();
 	// 		}
 	// 	}
-
-	// 	class NoteCellRenderer<Note> extends JLabel implements ListCellRenderer<Note> {
-	// 		public Component getListCellRendererComponent(JList<? extends Note> list, Note value, int index, boolean isSelected, boolean cellHasFocus) {
-	// 			String text = value.toString();
-	// 			if(text.equals("")) text = "Nameless";
-	// 			setText(text);
-	// 			if (isSelected) setBackground(list.getSelectionBackground());
-	// 			else setBackground(list.getBackground());
-	// 			setFont(list.getFont());
-	// 			setOpaque(true);
-	// 			return this;
-	// 		}
-	// 	}
-
-	// 	notesList.addMouseListener(new NoteListMouseListener());
-	// 	notesList.setCellRenderer(new NoteCellRenderer<Note>());
-
-	// 	updateList();
-	// 	add(notesList, BorderLayout.CENTER);
-
-	// 	JScrollPane scrollPane = new JScrollPane(notesList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-	// 	add(scrollPane, BorderLayout.CENTER);
 	// }
 
 	public void toggleVisible() {
-		// setVisible(!isVisible());
-		System.out.println("toggleVisible(): not yet supported");
+		setVisible(!isVisible());
 	}
 
 	public void createNote() {
 		newEditor(null);
+	}
+
+	public void openNote(QModelIndex index) {
+		Note note = notesData.get(index);
+		if(!note.editing) newEditor(notesData.get(index));
 	}
 
 	private void newEditor(Note noteParam) {
@@ -126,13 +111,5 @@ public class Notes extends QWidget {
 		// notesList.setListData(notesData); //one time isn't enough, huh?
 
 		// notesList.setListData(notesDatabase.getNotesList()); //consider the problem with Note duplicates
-	}
-
-	private void closeDatabases() {
-		notesDatabase.closeQueue();
-	}
-
-	public void cleanUp() {
-		closeDatabases();
 	}
 }

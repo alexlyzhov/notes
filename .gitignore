@@ -1,7 +1,9 @@
 notes.db
 /*.class
-jxgrabkey/**
-javolution/**
-com/**
-lib/**
+jxgrabkey
+javolution
+com
+lib
 version.properties
+*.sh
+*.log

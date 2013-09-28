@@ -26,7 +26,8 @@ public class Note {
 	}
 
 	public String toString() {
-		return this.name;
+		if((name == null) || (name.equals(""))) return "Nameless";
+		else return name;
 	}
 
 	public int getID() {

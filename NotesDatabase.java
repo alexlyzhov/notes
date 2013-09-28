@@ -1,12 +1,14 @@
 import com.almworks.sqlite4java.*;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.util.ArrayList;
 import java.io.File;
 
 public class NotesDatabase {
 	private SQLiteQueue queue;
-	// private SQLiteConnection con;
 
 	public NotesDatabase() {
+		Logger.getLogger("com.almworks.sqlite4java").setLevel(Level.OFF);
 		initQueue();
 		createTable();
 	}
@@ -15,14 +17,6 @@ public class NotesDatabase {
 		queue = new SQLiteQueue(new File("notes.db"));
 		queue.start();
 	}
-
-	// private void open() {
-	// 	File file = new File("notes.db");
-	// 	con = new SQLiteConnection(file);
-	// 	try {
-	// 		con.open();
-	// 	} catch(SQLiteException ex) {ex.printStackTrace();}
-	// }
 
 	private void createTable() {
 		queue.execute(new SQLiteJob<Object>() {

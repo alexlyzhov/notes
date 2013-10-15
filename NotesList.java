@@ -3,9 +3,9 @@ import org.gnome.gtk.*;
 public class NotesList {
 	private Base base;
 
-	private final DataColumnString nameColumn = new DataColumnString();
-	private final DataColumnString timeColumn = new DataColumnString();
-	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
+	public static final DataColumnString nameColumn = new DataColumnString();
+	public static final DataColumnString timeColumn = new DataColumnString();
+	public static final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
 	private final ListStore model = new ListStore(new DataColumn[] {nameColumn, timeColumn, noteColumn});
 	private TreeView tree;
 
@@ -25,19 +25,38 @@ public class NotesList {
 		model.setSortColumn(timeColumn, SortType.DESCENDING);
 
 		tree.getSelection().connect(new TreeSelection.Changed() { //grabbing events
-			public void onChanged(TreeSelection selection) {
-				Note note = model.getValue(selection.getSelected(), noteColumn);
-				if(!note.isEditing()) new Editor(note, NotesList.this);
+			public void onChanged(TreeSelection selection) {                          //make it activating/multiple selection instead of single
+				TreeIter row = selection.getSelected();
+				Note note = getNote(row);
+				if(!note.isEditing()) new Editor(NotesList.this, row);
 			}
 		});
 	}
 
-	private void addNote(Note note) {
+	public Note getNote(TreeIter row) {
+		return model.getValue(row, noteColumn);
+	}
+
+	private TreeIter addNote(Note note) {
 		TreeIter row = model.appendRow();
-		if(note.getName().equals("")) model.setValue(row, nameColumn, "Nameless");
-		else model.setValue(row, nameColumn, note.getName());
-		model.setValue(row, timeColumn, note.getTime());
 		model.setValue(row, noteColumn, note);
+		setData(row);
+		return row;
+	}
+
+	public void setData(TreeIter row) {
+		setName(row);
+		setTime(row);
+	}
+
+	public void setName(TreeIter row) {
+		Note note = getNote(row);
+		model.setValue(row, nameColumn, note.getOutputName());
+	}
+
+	public void setTime(TreeIter row) {
+		Note note = getNote(row);
+		model.setValue(row, timeColumn, note.getTime());
 	}
 
 	public void onExit() {
@@ -48,15 +67,18 @@ public class NotesList {
 		return tree;
 	}
 
-	public Note newNote() {
-		long lastID = base.newNote(new Note("", ""));
-		Note note = base.getNote(lastID);
-		addNote(note);
-		return note;
+	public TreeModel getModel() {
+		return getTreeView().getModel();
 	}
 
-	public void updateNote(Note note) {
-		base.updateNote(note);
+	public TreeIter newNote() {
+		Note note = new Note("", "");
+		base.newNote(note);
+		return addNote(note);
+	}
+
+	public void updateNote(TreeIter row) {
+		base.updateNote(getNote(row), this, row);
 	}
 
 	// public void removeNote(Note note) {

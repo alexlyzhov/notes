@@ -46,20 +46,18 @@ public class Notes extends Window {
 		        return false;
 		    }
 		});
-		setDefaultSize(250, 550);
-		keys = new Keys(this);
+		setDefaultSize(250, 550); //restrain maximum size
 		toggleVisible();
+		keys = new Keys(this);
 	}
 
 	public void toggleVisible() {
 		if(visible) hide();
 		else showAll();
 		visible = !visible; 
-		System.out.println("toggleVisible");
 	}
 
-	public void createNote() {
-		System.out.println("createNote");
-		new Editor(list.newNote(), list);
+	public void createNote() { //optimize creating note by displaying interface immediately
+		new Editor(list, list.newNote());
 	}
 }

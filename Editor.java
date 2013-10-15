@@ -1,98 +1,84 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
+import org.gnome.gdk.Event;
 
 public class Editor extends Window {
 	private Note note;
-	private NotesList notesList;
+	private NotesList list;
+	private TreeIter row;
 	private Pixbuf edit;
 	private String initialName, initialContent;
-	// JTextField name;
-	// JTextPane content;
 
-	public Editor(Note noteParam, NotesList listParam) {
-		note = noteParam;
-		notesList = listParam;
+	private VBox vbox;
+	private Entry nameEntry;
+	private TextBuffer buffer;
+	private TextView text;
+	private ScrolledWindow scroll;
+
+	public Editor(NotesList listParam, TreeIter rowParam) {
+		list = listParam;
+		row = rowParam;
+		note = list.getNote(row);
+
 		saveInitialValues();
 		note.startEditing();
 
-		setTitle("Editor"); //later do it with editing note title
 		try {
 			edit = new Pixbuf("ico/edit.png");
 		} catch(Exception ex) {ex.printStackTrace();}
+		setTitle();
+		setIcon(edit);
 
-		// addWindowListener(new WindowAdapter() {
-		// 	public void windowClosing(WindowEvent e) {
-		// 		save();
-		// 		finishEditing();
-		// 	}
-		// });
-		// setLayout(new BorderLayout());
-		// initName();
-		// initContent();
-		// pack();
-		// setLocationRelativeTo(null);
-		// setVisible(true);
-		// if(note.fresh) name.requestFocusInWindow();
-		// else content.requestFocusInWindow();
+		nameEntry = new Entry(note.getTrueName());
+		nameEntry.connect(new Entry.Changed() {
+			public void onChanged(Entry entry) {
+				note.setName(entry.getText());
+				list.setName(row);
+				setTitle();
+			}
+		});
+
+		buffer = new TextBuffer(); //focus on text if name is not empty
+		buffer.setText(note.getContent());
+		buffer.connect(new TextBuffer.Changed() {
+			public void onChanged(TextBuffer buffer) {
+				note.setContent(buffer.getText()); //it may be optimized to one-time write, though it does not consume too much memory
+			}
+		});
+		text = new TextView(buffer);
+		// text.setWrapMode(WrapMode.WORD);
+		scroll = new ScrolledWindow();
+		scroll.setPolicy(PolicyType.NEVER, PolicyType.ALWAYS);
+		scroll.add(text);
+
+		vbox = new VBox(false, 0);
+		vbox.packStart(nameEntry, false, false, 0);
+		vbox.packStart(scroll, true, true, 0);
+		add(vbox);
+		setDefaultSize(350, 350);
+
+		connect(new Window.DeleteEvent() {
+		    public boolean onDeleteEvent(Widget source, Event event) {
+		    	note.finishEditing();
+				if(changed()) list.updateNote(row);
+		        return false;
+		    }
+		});
+
+		showAll();
+	}
+
+	private void setTitle() {
+		super.setTitle(note.getOutputName());
 	}
 
 	private void saveInitialValues() {
-		initialName = note.getName();
+		initialName = note.getTrueName();
 		initialContent = note.getContent();
 	}
 
-	// private void initName() {
-	// 	name = new JTextField(note.name);
-	// 	name.setFont(new Font("Tahoma", Font.PLAIN, 18));
-	// 	add(name, BorderLayout.PAGE_START);
-	// 	name.addKeyListener(new KeyListener() {
-	// 		public void keyPressed(KeyEvent e) {}
-	// 		public void keyTyped(KeyEvent e) {}
-	// 		public void keyReleased(KeyEvent e) {
-	// 			int keyCode = e.getKeyCode();
-	// 			if(keyCode == KeyEvent.VK_ENTER) {
-	// 				content.requestFocusInWindow();
-	// 			}
-	// 		}
-	// 	});
-	// }
-
-	// private void initContent() {
-	// 	content = new JTextPane(); //view JTextPane class; set a font and other styles
-	// 	content.setPreferredSize(new Dimension(700, 400));
-	// 	content.setText(note.content);
-	// 	content.setCaretPosition(0);
-	// 	content.setFont(new Font("Tahoma", Font.PLAIN, 14));
-	// 	add(content, BorderLayout.CENTER);
-
-	// 	JScrollPane pane = new JScrollPane(content);
-	// 	add(pane, BorderLayout.CENTER);
-	// }
-
-	// private boolean changed() {
-	// 	if(!initialName.equals(note.name)) return true;
-	// 	if(!initialContent.equals(note.content)) return true;
-	// 	return false;
-	// }
-
-	// private void writeName() {
-	// 	note.name = name.getText();
-	// }
-
-	// private void writeContent() {
-	// 	note.content = content.getText();
-	// }
-
-	// private void save() {
-	// 	writeName(); //shield the value
-	// 	writeContent(); //this also
-	// 	if(!changed()) return;
-	// 	if(note.fresh) {
-	// 		notes.notesDatabase.newNote(note);
-	// 		note.fresh = false;
-	// 	} else {
-	// 		notes.notesDatabase.updateNote(note);
-	// 	}
-	// 	notes.updateList();
-	// }
+	private boolean changed() {
+		if((note.getTrueName().equals(initialName)) && (note.getContent().equals(initialContent))) return false;
+		return true;
+	}
 }

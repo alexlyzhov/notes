@@ -9,9 +9,7 @@ public class Note {
 
 	public Note(String name, String content, long id, String time) {
 		this(name, content);
-		this.id = id;
-		this.time = time;
-		usable = true;
+		initiate(id, time);
 	}
 
 	public Note(String name, String content) {
@@ -19,12 +17,37 @@ public class Note {
 		this.content = content;
 	}
 
-	public String getName() {
+	public void initiate(long id, String time) {
+		this.id = id;
+		this.time = time;
+		usable = true;
+	}
+
+	public void updateTime(String newTime) {
+		if(usable) {
+			this.time = newTime;
+		} else System.out.println("Error: time was not updated");
+	}
+
+	public String getTrueName() {
 		return name;
+	}
+
+	public String getOutputName() {
+		if(name.equals("")) return "Nameless";
+		else return name;
+	}
+
+	public void setName(String newName) {
+		this.name = newName;
 	}
 
 	public String getContent() {
 		return content;
+	}
+
+	public void setContent(String newContent) {
+		this.content = newContent;
 	}
 
 	public long getID() {

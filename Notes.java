@@ -7,6 +7,7 @@ public class Notes extends Window {
 	private VBox vbox;
 	private NotesList list;
 	private Keys keys;
+	private boolean visible;
 
 	public static void main(String args[]) {
 		Gtk.init(args);
@@ -15,12 +16,12 @@ public class Notes extends Window {
 	}
 
 	public void exit() {
-		// keys.cleanUp();
+		keys.cleanUp();
 		list.onExit();
         Gtk.mainQuit();
 	}
 
-	private Notes() { //clean project folder after installing thunar trash plugin
+	private Notes() {
 		try {
 			sun = new Pixbuf("ico/sun.png");
 			edit = new Pixbuf("ico/edit.png");
@@ -33,7 +34,7 @@ public class Notes extends Window {
 		button.setImage(new Image(edit));
 		button.connect(new Button.Clicked() {
 			public void onClicked(Button button) {
-				new Editor(list.newNote(), list);
+				createNote();
 			}
 		});
 		vbox.packStart(button, false, false, 0);
@@ -46,17 +47,19 @@ public class Notes extends Window {
 		    }
 		});
 		setDefaultSize(250, 550);
-		// keys = new Keys(this);
-		showAll();
+		keys = new Keys(this);
+		toggleVisible();
 	}
 
-
-
 	public void toggleVisible() {
+		if(visible) hide();
+		else showAll();
+		visible = !visible; 
 		System.out.println("toggleVisible");
 	}
 
 	public void createNote() {
 		System.out.println("createNote");
+		new Editor(list.newNote(), list);
 	}
 }

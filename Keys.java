@@ -1,6 +1,4 @@
 import jxgrabkey.*;
-import java.awt.event.KeyEvent; //get rid of awt
-import java.awt.event.InputEvent;
 
 public class Keys {
 	private final static int LIST_ID = 0;
@@ -26,8 +24,8 @@ public class Keys {
 		};
 		gk.addHotkeyListener(listener);
 		try {
-			gk.registerAwtHotkey(LIST_ID, InputEvent.ALT_MASK | InputEvent.SHIFT_MASK, KeyEvent.VK_O);
-			gk.registerAwtHotkey(NEW_ID, InputEvent.ALT_MASK | InputEvent.SHIFT_MASK, KeyEvent.VK_N);
+			gk.registerX11Hotkey(LIST_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.COLON);
+			gk.registerX11Hotkey(NEW_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.APOSTROPHE);
 		} catch(HotkeyConflictException ex) {ex.printStackTrace();}
 	}
 

@@ -1,13 +1,4 @@
-#notes.db
-#/*.class
-#jxgrabkey
-#javolution
-#com
-#lib
-#*.properties
-#*.sh
-#*.log
-
 *
 !.gitignore
 !*.java
+!ico/

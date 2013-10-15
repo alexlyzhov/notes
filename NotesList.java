@@ -26,7 +26,7 @@ public class NotesList {
 
 		tree.getSelection().connect(new TreeSelection.Changed() { //grabbing events
 			public void onChanged(TreeSelection selection) {                          //make it activating/multiple selection instead of single
-				TreeIter row = selection.getSelected();
+				TreeIter row = selection.getSelected();                               //remove elements in context menu or with ctrl + click and delete
 				Note note = getNote(row);
 				if(!note.isEditing()) new Editor(NotesList.this, row);
 			}

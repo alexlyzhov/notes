@@ -1,115 +1,62 @@
-import com.trolltech.qt.core.*;
-import com.trolltech.qt.gui.*;
+import org.gnome.gtk.*;
+import org.gnome.gdk.Pixbuf;
+import org.gnome.gdk.Event;
 
-public class Notes extends QWidget {
-	private NotesData notesData;
+public class Notes extends Window {
+	private Pixbuf sun, edit;
+	private VBox vbox;
+	private NotesList list;
 	private Keys keys;
 
-	private QListView list;
-	private QVBoxLayout layout;
-
 	public static void main(String args[]) {
-		QApplication.initialize(args);
+		Gtk.init(args);
 		new Notes();
-		QApplication.exec();
-	}
-
-	private Notes() {
-		notesData = new NotesData();
-		QApplication.setQuitOnLastWindowClosed(true);
-		init();
-		keys = new Keys(this);
-	}
-
-	public void init() {
-		setWindowTitle("Notes");
-		setWindowIcon(new QIcon("ico/sun.png"));
-
-		QDesktopWidget screen = new QDesktopWidget(); //replace it with system position/size determination
-		move(200, (int) (screen.height() * 0.2));
-		resize(300, (int) (screen.height() * 0.6));
-
-		QApplication.instance().lastWindowClosed.connect(this, "exit()");
-		layout = new QVBoxLayout(this);
-		initNewButton();
-		initList();
-
-		toggleVisible();
+		Gtk.main();
 	}
 
 	public void exit() {
-		notesData.exit();
-		keys.cleanUp();
+		// keys.cleanUp();
+		list.onExit();
+        Gtk.mainQuit();
 	}
 
-	private void initNewButton() {
-		QPushButton button = new QPushButton(new QIcon("ico/edit.png"), "New note", this);
-		button.setFixedHeight(30);
-		layout.addWidget(button);
-		button.clicked.connect(this, "createNote()");
+	private Notes() { //clean project folder after installing thunar trash plugin
+		try {
+			sun = new Pixbuf("ico/sun.png");
+			edit = new Pixbuf("ico/edit.png");
+		} catch(Exception ex) {ex.printStackTrace();}
+		setTitle("Notes");
+		setIcon(sun);
+		vbox = new VBox(false, 0);
+		add(vbox);
+		Button button = new Button("New note");
+		button.setImage(new Image(edit));
+		button.connect(new Button.Clicked() {
+			public void onClicked(Button button) {
+				new Editor(list.newNote(), list);
+			}
+		});
+		vbox.packStart(button, false, false, 0);
+		list = new NotesList();
+		vbox.packStart(list.getTreeView(), true, true, 0);
+		connect(new Window.DeleteEvent() {
+		    public boolean onDeleteEvent(Widget source, Event event) {
+		    	exit();
+		        return false;
+		    }
+		});
+		setDefaultSize(250, 550);
+		// keys = new Keys(this);
+		showAll();
 	}
 
-	private void initList() {
-		list = new QListView(this);
-		list.setModel(notesData);
-		// list.addScrollBarWidget(new QScrollBar(), Qt.AlignmentFlag.AlignTop);
-		list.activated.connect(this, "openNote(QModelIndex)");
-		// list.pressed.connect(this, "checkDelete()");
-		layout.addWidget(list);
-	}
 
-	// private void checkDelete() {
-	// 	if(QApplication.mouseButtons() & Qt.MouseButton.MidButton) {
-	// 		Note note = notesData.get(index);
-	// 		if(!note.editing) {
-	// 			notesData.remove(note);
-	// 			notesData.update();
-	// 		}
-	// 	}
-	// }
 
 	public void toggleVisible() {
-		setVisible(!isVisible());
+		System.out.println("toggleVisible");
 	}
 
 	public void createNote() {
-		newEditor(null);
-	}
-
-	public void openNote(QModelIndex index) {
-		Note note = notesData.get(index);
-		if(!note.editing) newEditor(notesData.get(index));
-	}
-
-	private void newEditor(Note noteParam) {
-		// new Editor(this, noteParam);
-		System.out.println("Editor class is still in transition to qt");
-	}
-
-	public void updateList() {
-		// Note[] newNotesData = notesDatabase.getNotesList();
-		// Vector<Note> notesDataClone = null;
-		// try {
-		// 	notesDataClone = (Vector<Note>) notesData.clone(); //get rid of clone method, it's unsafe
-		// } catch(ClassCastException ex) {ex.printStackTrace();}
-		// int index;
-		// for(Note newNote: newNotesData) {
-		// 	index = newNote.findIndex(notesData);
-		// 	if(index != -1) {
-		// 		System.out.println(newNote.name + " index is not -1");
-		// 		Note noteToUpdate = notesData.get(index);
-		// 		notesDataClone.remove(notesDataClone.indexOf(noteToUpdate));
-		// 		noteToUpdate.update(newNote);
-		// 	} else {
-		// 		System.out.println(newNote.name + " index is -1");
-		// 		notesData.add(newNote);
-		// 	}
-		// }
-		// for(Note oldNote: notesDataClone) {
-		// 	notesData.remove(notesData.indexOf(oldNote));
-		// }
-		// notesList.setListData(notesData); //one time isn't enough, huh?
-
-		// notesList.setListData(notesDatabase.getNotesList()); //consider the problem with Note duplicates
+		System.out.println("createNote");
 	}
 }

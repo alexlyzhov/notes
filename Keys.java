@@ -1,5 +1,5 @@
 import jxgrabkey.*;
-import java.awt.event.KeyEvent;
+import java.awt.event.KeyEvent; //get rid of awt
 import java.awt.event.InputEvent;
 
 public class Keys {

@@ -1,16 +1,17 @@
-import java.util.AbstractList;
-
 public class Note {
-	private int id;
-	private boolean idSet;
-	public String name;
-	public String content;
-	public boolean editing;
-	public boolean fresh; //make some use
+	private String name;
+	private String content;
+	private long id;
+	private String time;
 
-	public Note(int id, String name, String content) {
+	private boolean usable;
+	private boolean editing;
+
+	public Note(String name, String content, long id, String time) {
 		this(name, content);
-		setID(id);
+		this.id = id;
+		this.time = time;
+		usable = true;
 	}
 
 	public Note(String name, String content) {
@@ -18,20 +19,16 @@ public class Note {
 		this.content = content;
 	}
 
-	public Note() {}
-
-	public void update(Note another) {
-		this.name = another.name;
-		this.content = another.content;
+	public String getName() {
+		return name;
 	}
 
-	public String toString() {
-		if((name == null) || (name.equals(""))) return "Nameless";
-		else return name;
+	public String getContent() {
+		return content;
 	}
 
-	public int getID() {
-		if(idSet = true) {
+	public long getID() {
+		if(usable) {
 			return id;
 		} else {
 			System.out.println("ID was not set");
@@ -39,15 +36,24 @@ public class Note {
 		}
 	}
 
-	public void setID(int id) {
-		this.id = id;
-		idSet = true;
+	public String getTime() {
+		if(usable) {
+			return time;
+		} else {
+			System.out.println("Time was not set");
+			return "";
+		}
 	}
 
-	public int findIndex(AbstractList<Note> data) {
-		for(Note note: data) {
-			if(note.getID() == getID()) return data.indexOf(note);
-		}
-		return -1;
+	public void startEditing() {
+		editing = true;
+	}
+
+	public void finishEditing() {
+		editing = false;
+	}
+
+	public boolean isEditing() {
+		return editing;
 	}
 }

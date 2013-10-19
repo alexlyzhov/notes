@@ -29,7 +29,7 @@ public class Base {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 		        try {
-		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, name VARCHAR, content TEXT, time TEXT)");
+		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, name VARCHAR, content TEXT, time TEXT, tags TEXT)");
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -46,8 +46,8 @@ public class Base {
 	    			st = con.prepare("SELECT datetime('now')");
 	    			st.step();
 	    			String newDateTime = st.columnString(0);
-	    			st = con.prepare("INSERT INTO Notes (name, content, time) VALUES (?, ?, ?)");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, newDateTime);
+	    			st = con.prepare("INSERT INTO Notes (name, content, time, tags) VALUES (?, ?, ?, ?)");
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, newDateTime); st.bind(4, note.getTags());
 	    			st.step();
 	    			note.initiate(con.getLastInsertId(), newDateTime);
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
@@ -65,15 +65,15 @@ public class Base {
 	    			st = con.prepare("SELECT datetime('now')");
 	    			st.step();
 	    			note.updateTime(st.columnString(0));
-	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ? WHERE id = ?");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getID());
+	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ?, tags = ? WHERE id = ?");
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getTags()); st.bind(5, note.getID());
 	    			st.step();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;
 		    }
 		    protected void jobFinished(Object nullObject) {
-		    	list.setData(row);
+		    	if(row != null) list.setData(row);
 		    }
 		});
 	}
@@ -93,22 +93,22 @@ public class Base {
 		}).complete();		
 	}
 
-	public Note getNote(final long id) {
-		return queue.execute(new SQLiteJob<Note>() {
-		    protected Note job(SQLiteConnection con) {
-		    	Note result = null;
-		        SQLiteStatement st = null;
-		        try {
-		        	st = con.prepare("SELECT * FROM Notes WHERE id = ?");
-		        	st.bind(1, id);
-		        	st.step();
-		        	result = new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3));
-		        } catch(SQLiteException ex) {ex.printStackTrace();}
-		        finally {if(st != null) st.dispose();}
-		        return result;
-		    }
-		}).complete();
-	}
+	// public Note getNote(final long id) {
+	// 	return queue.execute(new SQLiteJob<Note>() {
+	// 	    protected Note job(SQLiteConnection con) {
+	// 	    	Note result = null;
+	// 	        SQLiteStatement st = null;
+	// 	        try {
+	// 	        	st = con.prepare("SELECT * FROM Notes WHERE id = ?");
+	// 	        	st.bind(1, id);
+	// 	        	st.step();
+	// 	        	result = new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3));
+	// 	        } catch(SQLiteException ex) {ex.printStackTrace();}
+	// 	        finally {if(st != null) st.dispose();}
+	// 	        return result;
+	// 	    }
+	// 	}).complete();
+	// }
 
 	public ArrayList<Note> getNotes() {
 		return queue.execute(new SQLiteJob<ArrayList<Note>>() {
@@ -120,7 +120,7 @@ public class Base {
 			    	while(true) {
 			    		st.step();
 			    		if(st.hasRow()) {
-				    		result.add(new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3)));
+				    		result.add(new Note(st.columnString(1), st.columnString(2), st.columnString(4), st.columnInt(0), st.columnString(3)));
 			    		} else break;
 			    	}
 			    } catch(SQLiteException ex) {ex.printStackTrace();}

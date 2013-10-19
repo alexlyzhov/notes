@@ -7,24 +7,24 @@ import org.gnome.gdk.EventKey;
 public class Editor extends Window {
 	private Note note;
 	private NotesList list;
-	private TreeIter row;
+	private TagsList tagsList;
 	private Pixbuf edit;
-	private String initialName, initialContent;
+	private String initialName, initialContent, initialTags;
 
 	private VBox vbox;
-	private Entry nameEntry;
+	private Entry nameEntry, tagsEntry;
 	private TextBuffer buffer;
 	private TextView text;
 	private ScrolledWindow scroll;
 
-	public Editor(NotesList listParam, TreeIter rowParam) {
+	public Editor(Note noteParam, NotesList listParam, TagsList tagsListParam) {
 		list = listParam;
-		row = rowParam;
-		note = list.getNote(row);
+		tagsList = tagsListParam;
+		note = noteParam;
 
 		saveInitialValues();
 		note.startEditing();
-		list.setData(row);
+		list.setData(note);
 
 		try {
 			edit = new Pixbuf("ico/edit.png");
@@ -38,7 +38,8 @@ public class Editor extends Window {
 		nameEntry.connect(new Entry.Changed() {
 			public void onChanged(Entry entry) {
 				note.setName(entry.getText());
-				list.setName(row);
+				list.setData(note);
+				if(changed()) list.updateNote(note);
 				setTitle();
 			}
 		});
@@ -52,13 +53,15 @@ public class Editor extends Window {
 			}
 		});
 
+		tagsEntry = new Entry(note.getTags());
+
 		buffer = new TextBuffer();
 		buffer.setText(note.getContent());
 		buffer.connect(new TextBuffer.Changed() {
 			public void onChanged(TextBuffer buffer) {
 				note.setContent(buffer.getText());
-		    	list.setData(row);
-				if(changed()) list.updateNote(row);
+		    	list.setData(note);
+				if(changed()) list.updateNote(note);
 			}
 		});
 		text = new TextView(buffer);
@@ -69,7 +72,8 @@ public class Editor extends Window {
 
 		vbox = new VBox(false, 0);
 		vbox.packStart(nameEntry, false, false, 0);
-		vbox.packStart(scroll, true, true, 0);
+		showTagsEntry();
+		vbox.packEnd(scroll, true, true, 0);
 		add(vbox);
 
 		if(!nameEntry.getText().equals("")) text.grabFocus();
@@ -77,12 +81,25 @@ public class Editor extends Window {
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	note.finishEditing();
-		    	list.setData(row);
+		    	list.setData(note);
+		    	note.setTags(tagsEntry.getText());
+		    	if(tagsChanged()) {
+		    		list.updateNote(note);
+		    		list.updateTags();
+		    	}
 		        return false;
 		    }
 		});
 
 		showAll();
+	}
+
+	private void showTagsEntry() {
+		vbox.packStart(tagsEntry, false, false, 0);
+	}
+
+	private void hideTagsEntry() {
+		vbox.remove(tagsEntry);
 	}
 
 	private void setTitle() {
@@ -94,10 +111,16 @@ public class Editor extends Window {
 	private void saveInitialValues() {
 		initialName = note.getName();
 		initialContent = note.getContent();
+		initialTags = note.getTags();
 	}
 
 	private boolean changed() {
 		if((note.getName().equals(initialName)) && (note.getContent().equals(initialContent))) return false;
+		return true;
+	}
+
+	private boolean tagsChanged() {
+		if(note.getTags().equals(initialTags)) return false;
 		return true;
 	}
 }

@@ -1,20 +1,27 @@
 public class Note {
-	private String name;
-	private String content;
-	private long id;
-	private String time;
+	private String name, content, tags;
+	private long id; private String time;
 
 	private boolean usable;
 	private boolean editing;
 
-	public Note(String name, String content, long id, String time) {
-		this(name, content);
+	public Note(String name, String content, String tags, long id, String time) {
+		this(name, content, tags);
 		initiate(id, time);
 	}
 
-	public Note(String name, String content) {
+	public Note(String name, String content, String tags) {
 		this.name = name;
 		this.content = content;
+		this.tags = tags;
+	}
+
+	public Note(String tags) {
+		this("", "", tags);
+	}
+
+	public Note() {
+		this("", "", "");
 	}
 
 	public void initiate(long id, String time) {
@@ -62,6 +69,14 @@ public class Note {
 			return "";
 		}
 	}
+
+	public String getTags() {
+		return tags;
+	}
+
+	public void setTags(String tags) {
+		this.tags = tags;
+	} 
 
 	public void startEditing() {
 		editing = true;

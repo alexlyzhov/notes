@@ -1,5 +1,6 @@
 import com.almworks.sqlite4java.*;
 import org.gnome.gtk.*;
+import java.util.ArrayList;
 
 public class Base {
 	private SQLiteQueue queue;
@@ -37,26 +38,26 @@ public class Base {
 		}).complete();
 	}
 
-	public void newNote(final Note note) { //profile
+	public void newNote(final Note note) {
 		queue.execute(new SQLiteJob<Object>() {
-		    protected Long job(SQLiteConnection con) {
+		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
 	    			st = con.prepare("SELECT datetime('now')");
 	    			st.step();
 	    			String newDateTime = st.columnString(0);
 	    			st = con.prepare("INSERT INTO Notes (name, content, time) VALUES (?, ?, ?)");
-	    			st.bind(1, note.getTrueName()); st.bind(2, note.getContent()); st.bind(2, newDateTime);
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(2, newDateTime);
 	    			st.step();
 	    			note.initiate(con.getLastInsertId(), newDateTime);
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;
 		    }
-		}).complete();		
+		}).complete();
 	}
 
-	public void updateNote(final Note note, final NotesList list, final TreeIter row) { //one method for updating name, and another for updating content
+	public void updateNote(final Note note, final NotesList list, final TreeIter row) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
@@ -65,7 +66,7 @@ public class Base {
 	    			st.step();
 	    			note.updateTime(st.columnString(0));
 	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ? WHERE id = ?");
-	    			st.bind(1, note.getTrueName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getID());
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getID());
 	    			st.step();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
@@ -101,11 +102,31 @@ public class Base {
 		        	st = con.prepare("SELECT * FROM Notes WHERE id = ?");
 		        	st.bind(1, id);
 		        	st.step();
-		        	result = new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3)); //columnLong(0)?
+		        	result = new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3));
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
 		        return result;
 		    }
+		}).complete();
+	}
+
+	public ArrayList<Note> getNotes() {
+		return queue.execute(new SQLiteJob<ArrayList<Note>>() {
+			protected ArrayList<Note> job(SQLiteConnection con) {
+				ArrayList<Note> result = new ArrayList<Note>();
+			    SQLiteStatement st = null;
+			    try {
+			    	st = con.prepare("SELECT * FROM Notes");
+			    	while(true) {
+			    		st.step();
+			    		if(st.hasRow()) {
+				    		result.add(new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3)));
+			    		} else break;
+			    	}
+			    } catch(SQLiteException ex) {ex.printStackTrace();}
+			    finally {if(st != null) st.dispose();}
+			    return result;
+			}
 		}).complete();
 	}
 

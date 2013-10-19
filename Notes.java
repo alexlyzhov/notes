@@ -8,6 +8,7 @@ public class Notes extends Window {
 	private NotesList list;
 	private Keys keys;
 	private boolean visible;
+	private ScrolledWindow scroll;
 
 	public static void main(String args[]) {
 		Gtk.init(args);
@@ -28,6 +29,7 @@ public class Notes extends Window {
 		} catch(Exception ex) {ex.printStackTrace();}
 		setTitle("Notes");
 		setIcon(sun);
+		setDefaultSize(250, 550);
 		vbox = new VBox(false, 0);
 		add(vbox);
 		Button button = new Button("New note");
@@ -39,14 +41,21 @@ public class Notes extends Window {
 		});
 		vbox.packStart(button, false, false, 0);
 		list = new NotesList();
-		vbox.packStart(list.getTreeView(), true, true, 0);
+		scroll = new ScrolledWindow();
+		scroll.setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
+		scroll.getVAdjustment().connect(new Adjustment.Changed() {
+			public void onChanged(Adjustment source) {
+				source.setValue(0);
+			}
+		});
+		scroll.add(list.getTreeView());
+		vbox.packStart(scroll, true, true, 0);
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	exit();
 		        return false;
 		    }
 		});
-		setDefaultSize(250, 550); //restrain maximum size
 		toggleVisible();
 		keys = new Keys(this);
 	}
@@ -57,7 +66,7 @@ public class Notes extends Window {
 		visible = !visible; 
 	}
 
-	public void createNote() { //optimize creating note by displaying interface immediately
+	public void createNote() {
 		new Editor(list, list.newNote());
 	}
 }

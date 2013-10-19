@@ -1,4 +1,6 @@
 import org.gnome.gtk.*;
+import org.gnome.gdk.EventButton;
+import org.gnome.gdk.MouseButton;
 
 public class NotesList {
 	private Base base;
@@ -11,11 +13,8 @@ public class NotesList {
 
 	public NotesList() {
 		base = new Base();
-
 		tree = new TreeView(model);
-		for(int i = 1; i <= base.getCount(); i++) { //setting data
-			addNote(base.getNote(i));
-		}
+		for(Note note: base.getNotes()) addNote(note);
 
 		TreeViewColumn vertical = tree.appendColumn(); //setting visible structure
 		vertical.setTitle("Name");
@@ -24,11 +23,18 @@ public class NotesList {
 		tree.setHeadersVisible(false);
 		model.setSortColumn(timeColumn, SortType.DESCENDING);
 
-		tree.getSelection().connect(new TreeSelection.Changed() { //grabbing events
-			public void onChanged(TreeSelection selection) {                          //make it activating/multiple selection instead of single
-				TreeIter row = selection.getSelected();                               //remove elements in context menu or with ctrl + click and delete
-				Note note = getNote(row);
-				if(!note.isEditing()) new Editor(NotesList.this, row);
+		tree.connect(new Widget.ButtonPressEvent() { //grabbing events
+			public boolean onButtonPressEvent(Widget source, EventButton event) {
+				TreePath path = tree.getPathAtPos((int) event.getX(), (int) event.getY());
+				TreeIter row = model.getIter(path);
+				if(path != null && !getNote(row).isEditing()) {
+					if(event.getButton() == MouseButton.LEFT) {
+						new Editor(NotesList.this, row);
+					} else if(event.getButton() == MouseButton.RIGHT) {
+						removeNote(row);
+					}
+				}
+				return true;
 			}
 		});
 	}
@@ -51,7 +57,10 @@ public class NotesList {
 
 	public void setName(TreeIter row) {
 		Note note = getNote(row);
-		model.setValue(row, nameColumn, note.getOutputName());
+		String name = note.getName();
+		if(name.equals("")) name = "Nameless";
+		if(note.isEditing()) name = name + " *";
+		model.setValue(row, nameColumn, name);
 	}
 
 	public void setTime(TreeIter row) {
@@ -81,18 +90,8 @@ public class NotesList {
 		base.updateNote(getNote(row), this, row);
 	}
 
-	// public void removeNote(Note note) {
-	// 	model.removeRow(getNoteRow(note));
-	// 	base.removeNote(note);
-	// }
-
-	// private TreeIter getNoteRow(Note reqNote) {
-	// 	TreeIter row = model.getIterFirst();
-	// 	if(row == null) return null;
-	// 	do {
-	// 		Note currNote = model.getValue(row, noteColumn);
-	// 		if(currNote.equals(reqNote)) return row;
-	// 	} while(row.iterNext());
-	// 	return null;
-	// }
+	public void removeNote(TreeIter row) {
+		base.removeNote(getNote(row));
+		model.removeRow(row);
+	}
 }

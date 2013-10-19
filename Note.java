@@ -29,15 +29,10 @@ public class Note {
 		} else System.out.println("Error: time was not updated");
 	}
 
-	public String getTrueName() {
+	public String getName() {
 		return name;
 	}
-
-	public String getOutputName() {
-		if(name.equals("")) return "Nameless";
-		else return name;
-	}
-
+	
 	public void setName(String newName) {
 		this.name = newName;
 	}

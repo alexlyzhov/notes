@@ -65,6 +65,7 @@ public class NotesList {
 
 	public void setTime(TreeIter row) {
 		Note note = getNote(row);
+		if(note.getTime() == null) System.out.println("Database is corrupted");
 		model.setValue(row, timeColumn, note.getTime());
 	}
 

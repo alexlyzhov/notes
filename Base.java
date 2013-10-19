@@ -47,7 +47,7 @@ public class Base {
 	    			st.step();
 	    			String newDateTime = st.columnString(0);
 	    			st = con.prepare("INSERT INTO Notes (name, content, time) VALUES (?, ?, ?)");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(2, newDateTime);
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, newDateTime);
 	    			st.step();
 	    			note.initiate(con.getLastInsertId(), newDateTime);
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}

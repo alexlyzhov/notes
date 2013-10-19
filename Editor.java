@@ -1,6 +1,8 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
+import org.gnome.gdk.Keyval;
+import org.gnome.gdk.EventKey;
 
 public class Editor extends Window {
 	private Note note;
@@ -29,7 +31,8 @@ public class Editor extends Window {
 		} catch(Exception ex) {ex.printStackTrace();}
 		setTitle();
 		setIcon(edit);
-		setDefaultSize(350, 350);
+		setDefaultSize(getScreen().getWidth() / 2, getScreen().getHeight() / 2);
+		setPosition(WindowPosition.CENTER);
 
 		nameEntry = new Entry(note.getName());
 		nameEntry.connect(new Entry.Changed() {
@@ -39,12 +42,23 @@ public class Editor extends Window {
 				setTitle();
 			}
 		});
+		nameEntry.connect(new Widget.KeyPressEvent() {
+			public boolean onKeyPressEvent(Widget source, EventKey event) {
+				if(event.getKeyval() == Keyval.Return) {
+					text.grabFocus();
+					return true;
+				}
+				return false;
+			}
+		});
 
 		buffer = new TextBuffer();
 		buffer.setText(note.getContent());
 		buffer.connect(new TextBuffer.Changed() {
 			public void onChanged(TextBuffer buffer) {
 				note.setContent(buffer.getText());
+		    	list.setData(row);
+				if(changed()) list.updateNote(row);
 			}
 		});
 		text = new TextView(buffer);
@@ -64,7 +78,6 @@ public class Editor extends Window {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	note.finishEditing();
 		    	list.setData(row);
-				if(changed()) list.updateNote(row);
 		        return false;
 		    }
 		});

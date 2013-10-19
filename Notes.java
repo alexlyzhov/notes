@@ -17,7 +17,9 @@ public class Notes extends Window {
 	}
 
 	public void exit() {
-		keys.cleanUp();
+		if(System.getProperty("os.name").equals("Linux")) {
+			keys.cleanUp();
+		}
 		list.onExit();
         Gtk.mainQuit();
 	}
@@ -29,7 +31,14 @@ public class Notes extends Window {
 		} catch(Exception ex) {ex.printStackTrace();}
 		setTitle("Notes");
 		setIcon(sun);
-		setDefaultSize(250, 550);
+
+		int width = getScreen().getWidth() * 2 / 15;
+		int height = getScreen().getHeight() * 7 / 10;
+		int xOffset = getScreen().getWidth() / 15;
+		int yOffset = (getScreen().getHeight() - height) / 2;
+		setDefaultSize(width, height);
+		move(xOffset, yOffset);
+
 		vbox = new VBox(false, 0);
 		add(vbox);
 		Button button = new Button("New note");
@@ -57,7 +66,9 @@ public class Notes extends Window {
 		    }
 		});
 		toggleVisible();
-		keys = new Keys(this);
+		if(System.getProperty("os.name").equals("Linux")) {
+			keys = new Keys(this);
+		}
 	}
 
 	public void toggleVisible() {

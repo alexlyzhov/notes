@@ -1,44 +1,46 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.EventButton;
 import org.gnome.gdk.MouseButton;
-import java.util.ArrayList;
 
-public class NotesList { //divide it to several new classes
-	private Base base;
-	private final TagsList tagsList;
-	public static final DataColumnString nameColumn = new DataColumnString();
-	public static final DataColumnString timeColumn = new DataColumnString();
-	public static final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
-	private final ListStore model;
+public class NotesList extends ScrolledWindow {
+	private final Notes notes;
+	private final DataColumnString nameColumn = new DataColumnString();
+	private final DataColumnString timeColumn = new DataColumnString();
+	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>(); //is it needed?
+	private ListStore model;
 	private TreeView tree;
-	private ArrayList<Note> initNotes;
 
-	public NotesList(Base base, final TagsList tagsListParam) {
-		this.base = base;
-		this.tagsList = tagsListParam;
+	public NotesList(Notes notesParam) {
+		this.notes = notesParam;
+
+		setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
+		getVAdjustment().connect(new Adjustment.Changed() {
+			public void onChanged(Adjustment source) {
+				source.setValue(0);
+			}
+		});
+
 		model = new ListStore(new DataColumn[] {nameColumn, timeColumn, noteColumn});
 		tree = new TreeView(model);
-		initNotes = base.getNotes();
-		updateTags();
-		updateList(null);
+		add(tree);
 
-		TreeViewColumn vertical = tree.appendColumn(); //setting visible structure
-		vertical.setTitle("Name");
-		CellRendererText text = new CellRendererText(vertical);
-		text.setText(nameColumn);
 		tree.setHeadersVisible(false);
+		TreeViewColumn nameViewColumn = tree.appendColumn();
+		nameViewColumn.setTitle("Name");
+		new CellRendererText(nameViewColumn).setText(nameColumn);
 		model.setSortColumn(timeColumn, SortType.DESCENDING);
 
-		tree.connect(new Widget.ButtonPressEvent() { //grabbing events
+		tree.connect(new Widget.ButtonPressEvent() {
 			public boolean onButtonPressEvent(Widget source, EventButton event) {
 				TreePath path = tree.getPathAtPos((int) event.getX(), (int) event.getY());
 				if(path != null) {
 					TreeIter row = model.getIter(path);
-					if(!getNote(row).isEditing()) {
+					Note note = getNote(row);
+					if(!note.isEditing()) {
 						if(event.getButton() == MouseButton.LEFT) {
-							new Editor(model.getValue(row, noteColumn), NotesList.this, tagsList);
+							notes.openNote(note);
 						} else if(event.getButton() == MouseButton.RIGHT) {
-							removeNote(row);
+							notes.removeNote(note);
 						}
 					}
 				}
@@ -47,67 +49,30 @@ public class NotesList { //divide it to several new classes
 		});
 	}
 
-	public void updateTags() {
-		tagsList.init();
-		for(Note note: initNotes) {
-			tagsList.updateTags(note);
-		}
-		tagsList.selectFirst();
-		updateList(null);
-	}
-
-	public void updateList(String tag) {
+	public void clear() {
 		model.clear();
-		boolean fl;
-		for(Note note: initNotes) {
-			String[] noteTags = note.getTags().split(",");
-			for(String noteTag: noteTags) {
-				fl = false;
-				if(tag == null) fl = true;
-				else if(tag.equals(noteTag)) fl = true;
-				if(fl) {
-					addNote(note);
-					break;
-				}
-			}
-		}
 	}
 
-	public Note getNote(TreeIter row) {
-		return model.getValue(row, noteColumn);
-	}
-
-	private TreeIter addNote(Note note) {
+	public void addNote(Note note) {
 		TreeIter row = model.appendRow();
 		model.setValue(row, noteColumn, note);
-		setData(row);
-		return row;
+		updateView(note);
 	}
 
-	public void setData(TreeIter row) {
-		setName(row);
-		setTime(row);
+	public boolean empty() {
+		if(model.getIterFirst() == null) return true;
+		return false;
 	}
 
-	public void setData(Note note) {
-		TreeIter row = findRow(note);
-		if(row != null) setData(row);
+	public void updateView(Note note) { //needed?
+		TreeIter row = getRow(note);
+		if(row != null) {
+			updateName(row);
+			updateTime(row);
+		}
 	}
 
-	public void setName(Note note) {
-		TreeIter row = findRow(note);
-		if(row != null) setName(row);
-	}
-
-	public TreeIter findRow(Note note) {
-		TreeIter row = model.getIterFirst();
-		do {
-			if(model.getValue(row, noteColumn).equals(note)) return row;
-		} while(row.iterNext());
-		return null;
-	}
-
-	public void setName(TreeIter row) {
+	private void updateName(TreeIter row) {
 		Note note = getNote(row);
 		String name = note.getName();
 		if(name.equals("")) name = "Nameless";
@@ -115,44 +80,21 @@ public class NotesList { //divide it to several new classes
 		model.setValue(row, nameColumn, name);
 	}
 
-	public void setTime(TreeIter row) {
+	private void updateTime(TreeIter row) {
 		Note note = getNote(row);
-		model.setValue(row, timeColumn, note.getTime());
+		String time = note.getTime();
+		model.setValue(row, timeColumn, time);
 	}
 
-	public void onExit() {
-		base.closeQueue();
+	private Note getNote(TreeIter row) {
+		return model.getValue(row, noteColumn);
 	}
 
-	public TreeView getTreeView() { //transform
-		return tree;
-	}
-
-	public TreeModel getModel() { //get rid
-		return getTreeView().getModel();
-	}
-
-	public Note newNote(String tag) {
-		Note note;
-		if(tag == null) note = new Note();
-		else note = new Note(tag);
-		base.newNote(note);
-		initNotes.add(note);
-		addNote(note);
-		return note;
-	}
-
-	public void updateNote(Note note) {
-		base.updateNote(note, this, findRow(note));
-	}
-
-	public void removeNote(TreeIter row) {
-		if(row != null) {
-			Note note = getNote(row);
-			base.removeNote(note);
-			initNotes.remove(note);
-			model.removeRow(row);
-			updateTags();
-		}
+	private TreeIter getRow(Note note) {
+		TreeIter row = model.getIterFirst();
+		do {
+			if(getNote(row).equals(note)) return row;
+		} while(row.iterNext());
+		return null;
 	}
 }

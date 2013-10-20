@@ -57,7 +57,7 @@ public class Base {
 		}).complete();
 	}
 
-	public void updateNote(final Note note, final NotesList list, final TreeIter row) {
+	public void updateNote(final Note note, final Notes notes) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
@@ -73,7 +73,7 @@ public class Base {
 		        return null;
 		    }
 		    protected void jobFinished(Object nullObject) {
-		    	if(row != null) list.setData(row);
+		    	notes.updateView(note);
 		    }
 		});
 	}
@@ -92,23 +92,6 @@ public class Base {
 		    }
 		}).complete();		
 	}
-
-	// public Note getNote(final long id) {
-	// 	return queue.execute(new SQLiteJob<Note>() {
-	// 	    protected Note job(SQLiteConnection con) {
-	// 	    	Note result = null;
-	// 	        SQLiteStatement st = null;
-	// 	        try {
-	// 	        	st = con.prepare("SELECT * FROM Notes WHERE id = ?");
-	// 	        	st.bind(1, id);
-	// 	        	st.step();
-	// 	        	result = new Note(st.columnString(1), st.columnString(2), st.columnInt(0), st.columnString(3));
-	// 	        } catch(SQLiteException ex) {ex.printStackTrace();}
-	// 	        finally {if(st != null) st.dispose();}
-	// 	        return result;
-	// 	    }
-	// 	}).complete();
-	// }
 
 	public ArrayList<Note> getNotes() {
 		return queue.execute(new SQLiteJob<ArrayList<Note>>() {

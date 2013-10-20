@@ -1,63 +1,59 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.EventButton;
-import java.util.ArrayList;
 
-public class TagsList {
-	private Base base;
-	private Notes window;
-	public static final DataColumnString nameColumn = new DataColumnString();
-	private final ListStore model = new ListStore(new DataColumn[] {nameColumn});
+public class TagsList extends ScrolledWindow {
+	private Notes notes;
+	private final DataColumnString nameColumn = new DataColumnString();
+	private ListStore model;
 	public TreeView tree;
 
-	public TagsList(Base base, final Notes window) {
-		this.base = base;
-		this.window = window;
+	public TagsList(Notes notes) {
+		this.notes = notes;
+
+		setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
+		getVAdjustment().connect(new Adjustment.Changed() {
+			public void onChanged(Adjustment source) {
+				source.setValue(0);
+			}
+		});
+
+		model = new ListStore(new DataColumn[] {nameColumn});
 		tree = new TreeView(model);
+		add(tree);
 
-		init();
-
-		TreeViewColumn vertical = tree.appendColumn();
-		vertical.setTitle("Tag");
-		CellRendererText text = new CellRendererText(vertical);
-		text.setText(nameColumn);
 		tree.setHeadersVisible(false);
-		tree.connect(new Widget.ButtonPressEvent() { //grabbing events
+		TreeViewColumn nameViewColumn = tree.appendColumn();
+		nameViewColumn.setTitle("Tag");
+		new CellRendererText(nameViewColumn).setText(nameColumn);
+
+		tree.connect(new Widget.ButtonPressEvent() {
 			public boolean onButtonPressEvent(Widget source, EventButton event) {
 				TreePath path = tree.getPathAtPos((int) event.getX(), (int) event.getY());
 				if(path != null) {
 					TreeIter row = model.getIter(path);
-					if(path.getIndices()[0] == 0) {
-						window.updateList(null);
-					} else {
-						window.updateList(model.getValue(row, nameColumn));
-					}
+					selectRow(row);
 				}
 				return false;
 			}
 		});
 	}
 
-	public void selectFirst() {
-		tree.getSelection().selectRow(model.getIterFirst());
+	public void clear() {
+		model.clear();
+		appendAllRow();
 	}
 
-	public void init() {
-		model.clear();
+	private void appendAllRow() {
 		TreeIter all = model.appendRow();
 		model.setValue(all, nameColumn, "All notes");
+		selectAllRow();
 	}
 
-	public void updateTags(Note note) {
+	public void addNoteTags(Note note) {
 		String[] newTags = note.getTags().split(",");
-		boolean fl;
 		for(String newTag: newTags) {
 			if(!newTag.equals("")) {
-				fl = false;
-				TreeIter row = model.getIterFirst();
-				do {
-					if(newTag.equals(model.getValue(row, nameColumn))) fl = true;
-				} while(fl == false && row.iterNext());
-				if(!fl) {
+				if(!tagExists(newTag)) {
 					addTag(newTag);
 				}
 			}
@@ -69,14 +65,41 @@ public class TagsList {
 		model.setValue(row, nameColumn, newTag);
 	}
 
-	public String getTag() {
-		if(tree.getSelection().getSelectedRows()[0].getIndices()[0] != 0) {
-			TreeIter row = tree.getSelection().getSelected();
-			return model.getValue(row, nameColumn);
-		} else return null;
+	private boolean tagExists(String tag) {
+		TreeIter row = model.getIterFirst();
+		while(row.iterNext()) {
+			if(tag.equals(getTag(row))) return true;
+		}
+		return false;
 	}
 
-	public TreeView getTreeView() {
-		return tree;
+	public void selectRow(TreeIter row) {
+		tree.getSelection().selectRow(row);
+		notes.updateNotesList();
+	}
+
+	public void selectAllRow() {
+		selectRow(model.getIterFirst());
+	}
+
+	private String getTag(TreeIter row) {
+		return model.getValue(row, nameColumn);
+	}
+
+	public TreeIter getRow(String tag) {
+		TreeIter row = model.getIterFirst();
+		while(row.iterNext()) { //check other postcontidion places
+			if(getTag(row).equals(tag)) return row;
+		}
+		return null;
+	}
+
+	public String getSelectedTag() {
+		TreePath[] paths = tree.getSelection().getSelectedRows();
+		if(paths.length == 0) {
+			return null;
+		}
+		if(paths[0].getIndices()[0] == 0) return null;//check equals(model.getIterFirst()) yoso
+		return getTag(model.getIter(paths[0]));
 	}
 }

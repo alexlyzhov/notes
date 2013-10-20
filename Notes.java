@@ -1,93 +1,61 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 public class Notes extends Window {
 	private Base base;
-	private Pixbuf sun, edit;
-	private VBox vbox;
-	public NotesList list;
-	private TagsList tagsList;
 	private Keys keys;
+	private ArrayList<Editor> editors = new ArrayList<Editor>();
 	private boolean visible;
-	private HPaned paned;
-	private ScrolledWindow scroll, tagsScroll;
+	public boolean tags = true;
+
+	private NotesList notesList;
+	private TagsList tagsList;
+	private NotesVBox vbox;
+
+	private ArrayList<Note> notesData;
 
 	public static void main(String args[]) {
 		Gtk.init(args);
 		new Notes();
+	}
+
+	private Notes() {
+		initBase();
+		initHotkeys();
+
+		setTitle("Notes");
+		setSunIcon();
+		setLeftLocation();
+		exitOnDelete();
+
+		notesList = new NotesList(this);
+		tagsList = new TagsList(this);
+		updateTagsList();
+		updateNotesList();
+
+		vbox = new NotesVBox(notesList, tagsList);
+		add(vbox);
+		toggleVisible();
 		Gtk.main();
 	}
 
-	public void exit() {
-		if(System.getProperty("os.name").equals("Linux")) {
-			keys.cleanUp();
-		}
+	private void exit() {
+		if(keys != null) keys.cleanUp();
 		base.closeQueue();
         Gtk.mainQuit();
 	}
 
-	private Notes() {
+	private void initBase() {
 		base = new Base();
-		try {
-			sun = new Pixbuf("ico/sun.png");
-			edit = new Pixbuf("ico/edit.png");
-		} catch(Exception ex) {ex.printStackTrace();}
-		setTitle("Notes");
-		setIcon(sun);
-
-		int width = getScreen().getWidth() * 2 / 10;
-		int height = getScreen().getHeight() * 7 / 10;
-		int xOffset = getScreen().getWidth() / 10;
-		int yOffset = (getScreen().getHeight() - height) / 2;
-		setDefaultSize(width, height);
-		move(xOffset, yOffset);
-
-		vbox = new VBox(false, 0);
-		add(vbox);
-		Button button = new Button("New note");
-		button.setImage(new Image(edit));
-		button.connect(new Button.Clicked() {
-			public void onClicked(Button button) {
-				createNote();
-			}
-		});
-		vbox.packStart(button, false, false, 0);
-
-		tagsList = new TagsList(base, this);
-
-		list = new NotesList(base, tagsList);
-		scroll = new ScrolledWindow();
-		scroll.setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
-		scroll.getVAdjustment().connect(new Adjustment.Changed() {
-			public void onChanged(Adjustment source) {
-				source.setValue(0);
-			}
-		});
-		scroll.add(list.getTreeView());
-
-		tagsScroll = new ScrolledWindow();
-		tagsScroll.setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
-		tagsScroll.add(tagsList.getTreeView());
-
-		paned = new HPaned(scroll, tagsScroll);
-		paned.setPosition(width * 2 / 3);
-		vbox.packEnd(paned, true, true, 0);
-
-		connect(new Window.DeleteEvent() {
-		    public boolean onDeleteEvent(Widget source, Event event) {
-		    	exit();
-		        return false;
-		    }
-		});
-		toggleVisible();
-		if(System.getProperty("os.name").equals("Linux")) {
-			keys = new Keys(this);
-		}
+		notesData = base.getNotes();
 	}
 
-	public void updateList(String tag) {
-		list.updateList(tag);
+	private void initHotkeys() {
+		if(System.getProperty("os.name").equals("Linux")) keys = new Keys(this);
+		else System.out.println("Global hotkeys with JXGrabKey are not supported on your platform");
 	}
 
 	public void toggleVisible() {
@@ -96,7 +64,187 @@ public class Notes extends Window {
 		visible = !visible; 
 	}
 
+	private void setSunIcon() {
+		try {
+			Pixbuf sun = new Pixbuf("ico/sun.png");
+			setIcon(sun);
+		} catch(Exception ex) {ex.printStackTrace();}
+	}
+
+	private void setLeftLocation() {
+		int sw = getScreen().getWidth();
+		int sh = getScreen().getHeight();
+		int w = sw * 2 / 10;
+		int h = sh * 7 / 10;
+		int x = sw / 10;
+		int y = (sh - h) / 2;
+		setDefaultSize(w, h);
+		move(x, y);
+	}
+
+	private void exitOnDelete() {
+		connect(new Window.DeleteEvent() {
+		    public boolean onDeleteEvent(Widget source, Event event) {
+		    	exit();
+		        return false;
+		    }
+		});
+	}
+
+	public void toggleTags() {
+		tags = !tags;
+		vbox.togglePack();
+		for(Editor editor: editors) {
+			editor.toggleTags();
+		}
+	}
+
+	private class NewNoteButton extends Button {
+		private NewNoteButton() {
+			super("New note");
+
+			Pixbuf edit = null;
+			try {
+				edit = new Pixbuf("ico/edit.png");
+			} catch(Exception ex) {ex.printStackTrace();}
+			setImage(new Image(edit));
+
+			connect(new Button.Clicked() {
+				public void onClicked(Button button) {
+					createNote();
+				}
+			});
+		}
+	}
+
+	private class PanedLists extends HPaned {
+		private PanedLists(NotesList notesList, TagsList tagsList) {
+			super(notesList, tagsList);
+			setPosition(getWidth() * 2 / 3);
+		}
+	}
+
+	private class NotesVBox extends VBox {
+		private NewNoteButton button;
+		private PanedLists paned;
+		private NotesVBox(NotesList notesList, TagsList tagsList) {
+			super(false, 0);
+			button = new NewNoteButton();
+			paned = new PanedLists(notesList, tagsList);
+			packStart(button, false, false, 0);
+			packEnd(paned, true, true, 0);
+		}
+
+		private void togglePack() { //later fix the matter with focus on button
+			Widget[] elems = getChildren();
+			if(Arrays.asList(elems).contains(paned)) {
+				remove(paned);
+				for(Widget widget: paned.getChildren()) {
+					if(widget.equals(notesList)) {
+						paned.remove(notesList);
+					}
+				}
+				packEnd(notesList, true, true, 0);
+			} else if(Arrays.asList(elems).contains(notesList)) {
+				boolean listInPaned = false;
+				for(Widget widget: paned.getChildren()) {
+					if(widget.equals(notesList)) listInPaned = true;
+				}
+				remove(notesList);
+				if(listInPaned == false) {
+					paned.add1(notesList);
+				}
+				packEnd(paned, true, true, 0);
+			} else System.out.println("Nothing to toggle and pack about");
+		}
+	}
+
+
+    //================================================================================
+    // Dealing with notes, database and lists
+    //================================================================================
+
+
+	public void openNote(Note note) {
+		new Editor(note, this);
+	}
+
 	public void createNote() {
-		new Editor(list.newNote(tagsList.getTag()), list, tagsList);
+		openNote(newNote());
+	}
+
+	public void updateTagsList() {
+		String selected = tagsList.getSelectedTag();
+		tagsList.clear();
+		for(Note note: notesData) {
+			tagsList.addNoteTags(note);
+		}
+		TreeIter selectedRow = tagsList.getRow(selected);
+		if(selectedRow != null) tagsList.selectRow(selectedRow);
+	}
+
+	public void updateNotesList() {
+		String tag = tagsList.getSelectedTag();
+		notesList.clear();
+		for(Note note: notesData) {
+			if(noteInTag(note, tag)) {
+				notesList.addNote(note);
+			}
+		}
+		if(notesList.empty() && tag != null) {
+			tagsList.selectAllRow();
+			updateNotesList();
+		}
+	}
+
+	private boolean noteInTag(Note note, String tag) {
+		String[] noteTags = note.getTags().split(",");
+		if(tag == null) return true;
+		for(String noteTag: noteTags) {
+			if(noteTag.equals(tag)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public Note newNote() {
+		String tag = tagsList.getSelectedTag();
+		Note note = null;
+		if(tag == null) note = new Note();
+		else note = new Note(tag);
+		base.newNote(note);
+		notesData.add(note);
+		updateNotesList();
+		return note;
+	}
+
+	public void updateNote(Note note) {
+		base.updateNote(note, this);
+	}
+
+	public void updateView(Note note) {
+		notesList.updateView(note);
+	}
+
+	public void removeNote(Note note) {
+		notesData.remove(note);
+		updateNotesList();
+		updateTagsList();
+		base.removeNote(note);
+	}
+
+	public void startEditing(Note note) {
+		note.startEditing();
+		notesList.updateView(note);
+	}
+
+	public void finishEditing(Note note) {
+		note.finishEditing();
+		notesList.updateView(note);
+	}
+
+	public ArrayList<Editor> getEditors() {
+		return editors;
 	}
 }

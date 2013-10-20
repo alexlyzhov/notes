@@ -20,10 +20,10 @@ public class Notes extends Window {
 
 	public static void main(String args[]) {
 		Gtk.init(args);
-		new Notes();
+		new Notes(args);
 	}
 
-	private Notes() {
+	private Notes(String args[]) {
 		initBase();
 		initHotkeys();
 
@@ -39,7 +39,9 @@ public class Notes extends Window {
 
 		vbox = new NotesVBox(notesList, tagsList);
 		add(vbox);
-		toggleVisible();
+		if(!runHidden(args)) {
+			toggleVisible();
+		}
 		Gtk.main();
 	}
 
@@ -47,6 +49,11 @@ public class Notes extends Window {
 		if(keys != null) keys.cleanUp();
 		base.closeQueue();
         Gtk.mainQuit();
+	}
+
+	private boolean runHidden(String args[]) {
+		if(Arrays.asList(args).contains("hide")) return true;
+		return false;
 	}
 
 	private void initBase() {

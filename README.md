@@ -1,17 +1,16 @@
 notes
 =====
 
-Simple gtk/sqlite notes manager
-Tested on Linux
+Simple gtk/sqlite notes manager (tested on Linux)
 
 controls
 =====
 
-Left click - open note; select tag
-Right click - remove note to trash or forever
+<code>Left click</code> - open note; select tag<br>
+<code>Right click</code> - remove note to trash or forever
 
-JXGrabKey global hotkeys:
-Alt+Shift+: - show/hide notes list
-Alt+Shift+' - create new note
-Alt+Shift+] - show/hide tags list and tag entries (default=on)
-Alt+Shift+[ - show/hide Trash entry (default=off)
+JXGrabKey global hotkeys:<br>
+- <code>Alt+Shift+:</code> - show/hide notes list<br>
+- <code>Alt+Shift+'</code> - create new note<br>
+- <code>Alt+Shift+]</code> - show/hide tags list and tag entries (default=on)<br>
+- <code>Alt+Shift+[</code> - show/hide Trash entry (default=off)

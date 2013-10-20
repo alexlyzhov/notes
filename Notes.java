@@ -9,7 +9,8 @@ public class Notes extends Window {
 	private Keys keys;
 	private ArrayList<Editor> editors = new ArrayList<Editor>();
 	private boolean visible;
-	public boolean tags = true;
+	public boolean showTags = true;
+	private boolean showTrash;
 
 	private NotesList notesList;
 	private TagsList tagsList;
@@ -92,11 +93,17 @@ public class Notes extends Window {
 	}
 
 	public void toggleTags() {
-		tags = !tags;
+		showTags = !showTags;
 		vbox.togglePack();
 		for(Editor editor: editors) {
 			editor.toggleTags();
 		}
+	}
+
+	public void toggleTrash() {
+		if(showTrash && tagsList.lastSelected()) tagsList.selectAllRow();
+		showTrash = !showTrash; //show trash only if there is something inside
+		updateTagsList();
 	}
 
 	private class NewNoteButton extends Button {
@@ -179,6 +186,9 @@ public class Notes extends Window {
 		for(Note note: notesData) {
 			tagsList.addNoteTags(note);
 		}
+		if(showTrash) {
+			tagsList.addTrash();
+		} 
 		TreeIter selectedRow = tagsList.getRow(selected);
 		if(selectedRow != null) tagsList.selectRow(selectedRow);
 	}
@@ -199,6 +209,19 @@ public class Notes extends Window {
 
 	private boolean noteInTag(Note note, String tag) {
 		String[] noteTags = note.getTags().split(",");
+		if(tag == null) {
+			for(String noteTag: noteTags) {
+				if(noteTag.equals("Trash")) {
+					return false;
+				}
+			}
+		} else if(!tag.equals("Trash")) {
+			for(String noteTag: noteTags) {
+				if(noteTag.equals("Trash")) {
+					return false;
+				}
+			}
+		}
 		if(tag == null) return true;
 		for(String noteTag: noteTags) {
 			if(noteTag.equals(tag)) {
@@ -228,10 +251,17 @@ public class Notes extends Window {
 	}
 
 	public void removeNote(Note note) {
-		notesData.remove(note);
+		if(showTrash && tagsList.lastSelected()) {
+			notesData.remove(note);
+			base.removeNote(note);
+		} else {
+			String tags = note.getTags();
+			if(tags.equals("")) tags = "Trash";
+			else tags = tags + ",Trash";
+			note.setTags(tags);
+		}
 		updateNotesList();
 		updateTagsList();
-		base.removeNote(note);
 	}
 
 	public void startEditing(Note note) {

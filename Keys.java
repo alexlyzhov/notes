@@ -4,6 +4,7 @@ public class Keys {
 	private final static int LIST_ID = 0;
 	private final static int NEW_ID = 1;
 	private final static int TAGS_ID = 2;
+	private final static int TRASH_ID = 3;
 
 	private JXGrabKey gk;
 	private HotkeyListener listener;
@@ -23,14 +24,18 @@ public class Keys {
 					case TAGS_ID:
 						notes.toggleTags();
 						break;
+					case TRASH_ID:
+						notes.toggleTrash();
+						break;
 				}
 			}
 		};
 		gk.addHotkeyListener(listener);
 		try {
-			gk.registerX11Hotkey(LIST_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.COLON);
-			gk.registerX11Hotkey(NEW_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.APOSTROPHE);
-			gk.registerX11Hotkey(TAGS_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.BRACKET_RIGHT);
+			gk.registerX11Hotkey(LIST_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.COLON); //Alt+Shift+:
+			gk.registerX11Hotkey(NEW_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.APOSTROPHE); //Alt+Shift+'
+			gk.registerX11Hotkey(TAGS_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.BRACKET_RIGHT); //Alt+Shift+]
+			gk.registerX11Hotkey(TRASH_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.BRACKET_LEFT); //Alt+Shift+[
 		} catch(HotkeyConflictException ex) {ex.printStackTrace();}
 	}
 
@@ -38,6 +43,7 @@ public class Keys {
 		gk.unregisterHotKey(LIST_ID);
 		gk.unregisterHotKey(NEW_ID);
 		gk.unregisterHotKey(TAGS_ID);
+		gk.unregisterHotKey(TRASH_ID);
 		gk.removeHotkeyListener(listener);
 		gk.cleanUp();
 	}

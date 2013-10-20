@@ -47,6 +47,11 @@ public class TagsList extends ScrolledWindow {
 	public void addNoteTags(Note note) {
 		String[] newTags = note.getTags().split(",");
 		for(String newTag: newTags) {
+			if(newTag.equals("Trash")) {
+				return;
+			}
+		}
+		for(String newTag: newTags) {
 			if(!newTag.equals("")) {
 				if(!tagExists(newTag)) {
 					addTag(newTag);
@@ -66,6 +71,15 @@ public class TagsList extends ScrolledWindow {
 			if(tag.equals(getTag(row))) return true;
 		}
 		return false;
+	}
+
+	public void addTrash() {
+		TreeIter row = model.appendRow();
+		model.setValue(row, nameColumn, "Trash");
+	}
+
+	public boolean lastSelected() {
+		return tree.getSelection().getSelected().iterNext() == false;
 	}
 
 	public void selectRow(TreeIter row) {

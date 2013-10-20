@@ -135,7 +135,7 @@ public class Notes extends Window {
 			packEnd(paned, true, true, 0);
 		}
 
-		private void togglePack() { //later fix the matter with focus on button
+		private void togglePack() {
 			Widget[] elems = getChildren();
 			if(Arrays.asList(elems).contains(paned)) {
 				remove(paned);

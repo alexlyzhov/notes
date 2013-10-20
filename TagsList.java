@@ -2,13 +2,13 @@ import org.gnome.gtk.*;
 import org.gnome.gdk.EventButton;
 
 public class TagsList extends ScrolledWindow {
-	private Notes notes;
+	private final Notes notes;
 	private final DataColumnString nameColumn = new DataColumnString();
 	private ListStore model;
 	public TreeView tree;
 
-	public TagsList(Notes notes) {
-		this.notes = notes;
+	public TagsList(Notes notesParam) {
+		this.notes = notesParam;
 
 		setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
 		getVAdjustment().connect(new Adjustment.Changed() {
@@ -24,16 +24,11 @@ public class TagsList extends ScrolledWindow {
 		tree.setHeadersVisible(false);
 		TreeViewColumn nameViewColumn = tree.appendColumn();
 		nameViewColumn.setTitle("Tag");
-		new CellRendererText(nameViewColumn).setText(nameColumn);
+		new CellRendererText(nameViewColumn).setText(nameColumn); //sort tags
 
-		tree.connect(new Widget.ButtonPressEvent() {
-			public boolean onButtonPressEvent(Widget source, EventButton event) {
-				TreePath path = tree.getPathAtPos((int) event.getX(), (int) event.getY());
-				if(path != null) {
-					TreeIter row = model.getIter(path);
-					selectRow(row);
-				}
-				return false;
+		tree.getSelection().connect(new TreeSelection.Changed() {
+			public void onChanged(TreeSelection selection) {
+				notes.updateNotesList();
 			}
 		});
 	}
@@ -75,7 +70,6 @@ public class TagsList extends ScrolledWindow {
 
 	public void selectRow(TreeIter row) {
 		tree.getSelection().selectRow(row);
-		notes.updateNotesList();
 	}
 
 	public void selectAllRow() {
@@ -88,7 +82,7 @@ public class TagsList extends ScrolledWindow {
 
 	public TreeIter getRow(String tag) {
 		TreeIter row = model.getIterFirst();
-		while(row.iterNext()) { //check other postcontidion places
+		while(row.iterNext()) {
 			if(getTag(row).equals(tag)) return row;
 		}
 		return null;
@@ -99,7 +93,7 @@ public class TagsList extends ScrolledWindow {
 		if(paths.length == 0) {
 			return null;
 		}
-		if(paths[0].getIndices()[0] == 0) return null;//check equals(model.getIterFirst()) yoso
+		if(paths[0].getIndices()[0] == 0) return null;
 		return getTag(model.getIter(paths[0]));
 	}
 }

@@ -58,23 +58,20 @@ public class Editor extends Window {
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	notes.finishEditing(note);
-		    	if(changed) {
-			    	saveTags();
-		    		notes.updateNote(note);
-		    		notes.updateTagsList();
-		    	}
 		    	notes.getEditors().remove(this);
 		        return false;
 		    }
 		});
 	}
 
-	private void updateNoteData() { //try to write tags here instantly
+	private void updateNoteData() {
 		changed = true;
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
-		notes.updateView(note);
+		saveTags();
 		notes.updateNote(note);
+		notes.updateTagsList();
+		notes.updateNotesList();
 	}
 
 	private String tagsOutput(String tags) {
@@ -100,7 +97,7 @@ public class Editor extends Window {
 			piece = piece.trim();
 			if(!piece.equals("")) {
 				if(!addComma) addComma = true;
-				else tags = tags += ","; //screen the comma
+				else tags = tags += ",";
 				tags = tags += piece;
 			}	
 		}

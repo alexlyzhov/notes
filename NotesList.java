@@ -6,7 +6,7 @@ public class NotesList extends ScrolledWindow {
 	private final Notes notes;
 	private final DataColumnString nameColumn = new DataColumnString();
 	private final DataColumnString timeColumn = new DataColumnString();
-	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>(); //is it needed?
+	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
 	private ListStore model;
 	private TreeView tree;
 
@@ -64,7 +64,7 @@ public class NotesList extends ScrolledWindow {
 		return false;
 	}
 
-	public void updateView(Note note) { //needed?
+	public void updateView(Note note) {
 		TreeIter row = getRow(note);
 		if(row != null) {
 			updateName(row);

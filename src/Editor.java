@@ -51,13 +51,14 @@ public class Editor extends Window {
 
 	private void setCenterLocation() {
 		setDefaultSize(getScreen().getWidth() / 2, getScreen().getHeight() / 2);
-		setPosition(WindowPosition.CENTER);
+		move(getScreen().getWidth() / 8 * 3, getScreen().getHeight() / 4);
 	}
 
 	private void saveOnDelete() {
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	notes.finishEditing(note);
+		    	if(note.empty()) notes.removeNoteCompletely(note);
 		    	notes.getEditors().remove(this);
 		        return false;
 		    }
@@ -116,7 +117,7 @@ public class Editor extends Window {
 			connect(new Widget.KeyPressEvent() {
 				public boolean onKeyPressEvent(Widget source, EventKey event) {
 					if(event.getKeyval() == Keyval.Return) {
-						text.grabFocus();
+						text.grabTextFocus();
 						return true;
 					}
 					return false;

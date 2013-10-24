@@ -52,6 +52,11 @@ public class Note {
 		this.content = newContent;
 	}
 
+	public boolean empty() {
+		if(getName().equals("") && getContent().equals("")) return true;
+		return false;
+	}
+
 	public long getID() {
 		if(usable) {
 			return id;

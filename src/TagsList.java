@@ -24,11 +24,13 @@ public class TagsList extends ScrolledWindow {
 		tree.setHeadersVisible(false);
 		TreeViewColumn nameViewColumn = tree.appendColumn();
 		nameViewColumn.setTitle("Tag");
-		new CellRendererText(nameViewColumn).setText(nameColumn); //sort tags
+		new CellRendererText(nameViewColumn).setText(nameColumn);
 
 		tree.getSelection().connect(new TreeSelection.Changed() {
 			public void onChanged(TreeSelection selection) {
-				notes.updateNotesList();
+				if(!nothingSelected()) {
+					notes.updateNotesList();
+				}
 			}
 		});
 	}
@@ -79,6 +81,8 @@ public class TagsList extends ScrolledWindow {
 	}
 
 	public boolean lastSelected() {
+		TreeIter selected = tree.getSelection().getSelected();
+		if(selected == null) return false; //logically?
 		return tree.getSelection().getSelected().iterNext() == false;
 	}
 
@@ -95,19 +99,37 @@ public class TagsList extends ScrolledWindow {
 	}
 
 	public TreeIter getRow(String tag) {
-		TreeIter row = model.getIterFirst();
-		while(row.iterNext()) {
-			if(getTag(row).equals(tag)) return row;
+		if(tag != null) {
+			TreeIter row = model.getIterFirst();
+			while(row.iterNext()) {
+				if(getTag(row).equals(tag)) return row;
+			}
 		}
 		return null;
 	}
 
 	public String getSelectedTag() {
-		TreePath[] paths = tree.getSelection().getSelectedRows();
-		if(paths.length == 0) {
+		if(nothingSelected()) {
+			System.out.println("Error: call getSelectedTag() when nothing selected");
 			return null;
 		}
-		if(paths[0].getIndices()[0] == 0) return null;
+		if(allRowSelected()) return null;
+		TreePath[] paths = tree.getSelection().getSelectedRows();
 		return getTag(model.getIter(paths[0]));
+	}
+
+	public boolean nothingSelected() {
+		TreePath[] paths = tree.getSelection().getSelectedRows();
+		if(paths.length == 0) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean allRowSelected() {
+		TreePath[] paths = tree.getSelection().getSelectedRows();
+		if(nothingSelected()) return false;
+		if(paths[0].getIndices()[0] == 0) return true;
+		return false;
 	}
 }

@@ -11,6 +11,7 @@ public class Notes extends Window {
 	private boolean visible;
 	public boolean showTags = true;
 	private boolean showTrash;
+	private boolean destroyed;
 
 	private NotesList notesList;
 	private TagsList tagsList;
@@ -18,7 +19,7 @@ public class Notes extends Window {
 
 	private ArrayList<Note> notesData;
 
-	public static void main(String args[]) {
+	public static void main(String args[]) { //divide backend and frontend
 		Gtk.init(args);
 		new Notes(args);
 	}
@@ -35,7 +36,6 @@ public class Notes extends Window {
 		notesList = new NotesList(this);
 		tagsList = new TagsList(this);
 		updateTagsList();
-		updateNotesList();
 
 		vbox = new NotesVBox(notesList, tagsList);
 		add(vbox);
@@ -46,9 +46,12 @@ public class Notes extends Window {
 	}
 
 	private void exit() {
-		if(keys != null) keys.cleanUp();
-		base.closeQueue();
-        Gtk.mainQuit();
+		if(!destroyed) {
+			if(keys != null) keys.cleanUp();
+			base.closeQueue();
+	        Gtk.mainQuit();
+	        destroyed = true;
+		}
 	}
 
 	private boolean runHidden(String args[]) {
@@ -97,6 +100,11 @@ public class Notes extends Window {
 		        return false;
 		    }
 		});
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			public void run() {
+				exit();
+			}
+		}));
 	}
 
 	public void toggleTags() {
@@ -107,9 +115,9 @@ public class Notes extends Window {
 		}
 	}
 
-	public void toggleTrash() {
+	public void toggleTrash() { //fix the bug with flashing on tag
 		if(showTrash && tagsList.lastSelected()) tagsList.selectAllRow();
-		showTrash = !showTrash; //show trash only if there is something inside
+		showTrash = !showTrash;
 		updateTagsList();
 	}
 
@@ -188,7 +196,10 @@ public class Notes extends Window {
 	}
 
 	public void updateTagsList() {
-		String selected = tagsList.getSelectedTag();
+		String selected = null;
+		if(!tagsList.nothingSelected()) {
+			selected = tagsList.getSelectedTag();
+		}
 		tagsList.clear();
 		for(Note note: notesData) {
 			tagsList.addNoteTags(note);
@@ -201,16 +212,18 @@ public class Notes extends Window {
 	}
 
 	public void updateNotesList() {
-		String tag = tagsList.getSelectedTag();
-		notesList.clear();
-		for(Note note: notesData) {
-			if(noteInTag(note, tag)) {
-				notesList.addNote(note);
+		if(!tagsList.nothingSelected()) {
+			String tag = tagsList.getSelectedTag();
+			notesList.clear();
+			for(Note note: notesData) {
+				if(noteInTag(note, tag)) {
+					notesList.addNote(note);
+				}
 			}
-		}
-		if(notesList.empty() && tag != null) {
-			tagsList.selectAllRow();
-			updateNotesList();
+			if(notesList.empty() && tag != null) {
+				System.out.println("recursively");
+				tagsList.selectAllRow();
+			}
 		}
 	}
 
@@ -259,14 +272,25 @@ public class Notes extends Window {
 
 	public void removeNote(Note note) {
 		if(showTrash && tagsList.lastSelected()) {
-			notesData.remove(note);
-			base.removeNote(note);
+			removeNoteCompletely(note);
 		} else {
-			String tags = note.getTags();
-			if(tags.equals("")) tags = "Trash";
-			else tags = tags + ",Trash";
-			note.setTags(tags);
+			removeNoteToTrash(note);
 		}
+	}
+
+	public void removeNoteCompletely(Note note) {
+		notesData.remove(note);
+		base.removeNote(note);
+		updateNotesList();
+		updateTagsList();
+	}
+
+	public void removeNoteToTrash(Note note) {
+		String tags = note.getTags();
+		if(tags.equals("")) tags = "Trash";
+		else tags = tags + ",Trash";
+		note.setTags(tags);
+		updateNote(note);
 		updateNotesList();
 		updateTagsList();
 	}

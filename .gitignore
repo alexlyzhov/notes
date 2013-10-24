@@ -1,4 +1,9 @@
 *
 !.gitignore
-!*.java
+!README.md
+!src/
+!src/*
 !ico/
+!ico/*
+!lib
+!lib/*

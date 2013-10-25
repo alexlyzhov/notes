@@ -1,7 +1,7 @@
 notes
 =====
 
-Simple gtk/sqlite notes manager (tested on Linux)
+Simple linux gtk/sqlite notes manager
 
 controls
 =====

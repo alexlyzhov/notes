@@ -5,13 +5,13 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 public class Notes extends Window {
+	private App app;
 	private Base base;
 	private Keys keys;
 	private ArrayList<Editor> editors = new ArrayList<Editor>();
 	private boolean visible;
 	public boolean showTags = true;
 	private boolean showTrash;
-	private boolean destroyed;
 
 	private NotesList notesList;
 	private TagsList tagsList;
@@ -19,14 +19,10 @@ public class Notes extends Window {
 
 	private ArrayList<Note> notesData;
 
-	public static void main(String args[]) { //divide backend and frontend
-		Gtk.init(args);
-		new Notes(args);
-	}
-
-	private Notes(String args[]) {
-		initBase();
-		initHotkeys();
+	public Notes(String args[], Base base, App app) {
+		this.base = base;
+		this.app = app;
+		notesData = base.getNotes();
 
 		setTitle("Notes");
 		setSunIcon();
@@ -42,31 +38,11 @@ public class Notes extends Window {
 		if(!runHidden(args)) {
 			toggleVisible();
 		}
-		Gtk.main();
-	}
-
-	private void exit() {
-		if(!destroyed) {
-			if(keys != null) keys.cleanUp();
-			base.closeQueue();
-	        Gtk.mainQuit();
-	        destroyed = true;
-		}
 	}
 
 	private boolean runHidden(String args[]) {
 		if(Arrays.asList(args).contains("hide")) return true;
 		return false;
-	}
-
-	private void initBase() {
-		base = new Base();
-		notesData = base.getNotes();
-	}
-
-	private void initHotkeys() {
-		if(System.getProperty("os.name").equals("Linux")) keys = new Keys(this);
-		else System.out.println("Global hotkeys with JXGrabKey are not supported on your platform");
 	}
 
 	public void toggleVisible() {
@@ -96,15 +72,10 @@ public class Notes extends Window {
 	private void exitOnDelete() {
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
-		    	exit();
+		    	app.exit();
 		        return false;
 		    }
 		});
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-			public void run() {
-				exit();
-			}
-		}));
 	}
 
 	public void toggleTags() {

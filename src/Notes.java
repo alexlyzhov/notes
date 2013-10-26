@@ -7,37 +7,32 @@ import java.util.ArrayList;
 public class Notes extends Window {
 	private App app;
 	private Base base;
-	private Keys keys;
-	private ArrayList<Editor> editors = new ArrayList<Editor>();
-	private boolean visible;
-	public boolean showTags = true;
-	private boolean showTrash;
-
-	private NotesList notesList;
-	private TagsList tagsList;
-	private NotesVBox vbox;
-
 	private ArrayList<Note> notesData;
 
+	private ArrayList<Editor> editors = new ArrayList<Editor>();
+	private boolean visible;
+	private boolean showTags = true;
+	private boolean showTrash;
+	private NotesVBox vbox;
+	private NotesList notesList;
+	private TagsList tagsList;
+
 	public Notes(String args[], Base base, App app) {
-		this.base = base;
 		this.app = app;
+		this.base = base;
+
 		notesData = base.getNotes();
+		notesList = new NotesList(this);
+		tagsList = new TagsList(this);
+		updateTagsList();
 
 		setTitle("Notes");
 		setSunIcon();
 		setLeftLocation();
 		exitOnDelete();
-
-		notesList = new NotesList(this);
-		tagsList = new TagsList(this);
-		updateTagsList();
-
 		vbox = new NotesVBox(notesList, tagsList);
 		add(vbox);
-		if(!runHidden(args)) {
-			toggleVisible();
-		}
+		if(!runHidden(args)) toggleVisible();
 	}
 
 	private boolean runHidden(String args[]) {
@@ -48,7 +43,7 @@ public class Notes extends Window {
 	public void toggleVisible() {
 		if(visible) hide();
 		else showAll();
-		visible = !visible; 
+		visible = !visible;
 	}
 
 	private void setSunIcon() {
@@ -86,10 +81,18 @@ public class Notes extends Window {
 		}
 	}
 
-	public void toggleTrash() { //fix the bug with flashing on tag
-		if(showTrash && tagsList.lastSelected()) tagsList.selectAllRow();
+	public boolean tagsShown() {
+		return showTags;
+	}
+
+	public void toggleTrash() {
+		if(showTrash) {
+			tagsList.removeTrash();
+			if(tagsList.lastSelected()) tagsList.selectAllRow();
+		} else {
+			tagsList.addTrash();
+		}
 		showTrash = !showTrash;
-		updateTagsList();
 	}
 
 	private class NewNoteButton extends Button {
@@ -120,6 +123,7 @@ public class Notes extends Window {
 	private class NotesVBox extends VBox {
 		private NewNoteButton button;
 		private PanedLists paned;
+
 		private NotesVBox(NotesList notesList, TagsList tagsList) {
 			super(false, 0);
 			button = new NewNoteButton();

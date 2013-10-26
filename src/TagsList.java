@@ -80,6 +80,16 @@ public class TagsList extends ScrolledWindow {
 		model.setValue(row, nameColumn, "Trash");
 	}
 
+	public void removeTrash() {
+		TreeIter row = model.getIterFirst();
+		TreeIter trashRow = null;
+		while(true) {
+			trashRow = row.copy();
+			if(row.iterNext() == false) break;
+		}
+		model.removeRow(trashRow);
+	}
+
 	public boolean lastSelected() {
 		TreeIter selected = tree.getSelection().getSelected();
 		if(selected == null) return false; //logically?

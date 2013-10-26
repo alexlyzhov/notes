@@ -1,16 +1,16 @@
 import org.gnome.gtk.Gtk;
 
-public class Expression {
+public class View {
 	Notes notes;
 	Keys keys;
 
-	public Expression(String[] args, Base base, App app) {
+	public View(String[] args, Base base, App app) {
 		Gtk.init(args);
 		notes = new Notes(args, base, app);
 		keys = new Keys(notes);
 	}
 
-	public void express() {
+	public void start() {
 		Gtk.main();
 	}
 

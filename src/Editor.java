@@ -182,7 +182,7 @@ public class Editor extends Window {
 			packEnd(text, true, true, 0);
 			this.tagsEntry = tagsEntry;
 			tagsEntry.show();
-			if(notes.showTags) {
+			if(notes.tagsShown()) {
 				packTags();
 			}
 		}

@@ -1,6 +1,6 @@
 public class App {
 	Base base;
-	Expression expression;
+	View view;
 
 	public static void main(String args[]) {
 		new App(args);
@@ -8,12 +8,12 @@ public class App {
 
 	public App(String args[]) {
 		base = new Base();
-		expression = new Expression(args, base, this);
-		expression.express();
+		view = new View(args, base, this);
+		view.start();
 	}
 
 	public void exit() {
 		base.closeQueue();
-		expression.exit();
+		view.exit();
 	}
 }

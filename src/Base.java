@@ -57,7 +57,7 @@ public class Base {
 		}).complete();
 	}
 
-	public void updateNote(final Note note, final Notes notes) {
+	public void updateNote(final Note note, final NotesList notesList) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
@@ -73,7 +73,7 @@ public class Base {
 		        return null;
 		    }
 		    protected void jobFinished(Object nullObject) {
-		    	notes.updateView(note);
+		    	notesList.updateView(note);
 		    }
 		});
 	}

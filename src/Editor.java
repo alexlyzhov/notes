@@ -17,11 +17,10 @@ public class Editor extends Window {
 	private ScrolledText text;
 	private EditorVBox vbox;
 
-	public Editor(Note noteParam, Notes notesParam) {
+	public Editor(Note noteParam, Notes notesParam, boolean showTagsInfo) {
 		note = noteParam;
 		notes = notesParam;
 		notes.startEditing(note);
-		notes.getEditors().add(this);
 
 		setNameTitle();
 		setEditIcon();
@@ -31,9 +30,18 @@ public class Editor extends Window {
 		nameEntry = new NameEntry(note.getName());
 		tagsEntry = new TagsEntry(tagsOutput(note.getTags()));
 		text = new ScrolledText(note.getContent());
-		vbox = new EditorVBox(nameEntry, tagsEntry, text);
+		vbox = new EditorVBox(nameEntry, tagsEntry, text, showTagsInfo);
 		add(vbox);
 		showAll();
+	}
+
+	public void removeOnDelete(final ArrayList<Editor> editors) {
+		connect(new Window.DeleteEvent() {
+		    public boolean onDeleteEvent(Widget source, Event event) {
+		    	editors.remove(Editor.this);
+		        return false;
+		    }
+		});
 	}
 
 	private void setNameTitle() {
@@ -59,7 +67,7 @@ public class Editor extends Window {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	notes.finishEditing(note);
 		    	if(note.empty()) notes.removeNoteCompletely(note);
-		    	notes.getEditors().remove(this);
+		    	// notes.getEditors().remove(this);
 		        return false;
 		    }
 		});
@@ -176,13 +184,13 @@ public class Editor extends Window {
 
 	private class EditorVBox extends VBox {
 		private TagsEntry tagsEntry = null;
-		private EditorVBox(NameEntry nameEntry, TagsEntry tagsEntry, ScrolledText text) {
+		private EditorVBox(NameEntry nameEntry, TagsEntry tagsEntry, ScrolledText text, boolean showTagsInfo) {
 			super(false, 0);
 			packStart(nameEntry, false, false, 0);
 			packEnd(text, true, true, 0);
 			this.tagsEntry = tagsEntry;
 			tagsEntry.show();
-			if(notes.tagsShown()) {
+			if(showTagsInfo) {
 				packTags();
 			}
 		}

@@ -94,4 +94,11 @@ public class Note {
 	public boolean isEditing() {
 		return editing;
 	}
+
+	public void removeToTrash() {
+		String tags = getTags();
+		if(tags.equals("")) tags = "Trash";
+		else tags = tags + ",Trash";
+		setTags(tags);
+	}
 }

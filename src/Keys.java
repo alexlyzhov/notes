@@ -9,23 +9,23 @@ public class Keys {
 	private JXGrabKey gk;
 	private HotkeyListener listener;
 
-	public Keys(final Notes notes) {
+	public Keys(final Notes notes, final NotesWindow notesWindow) {
 		System.loadLibrary("JXGrabKey");
 		gk = JXGrabKey.getInstance();
 		listener = new HotkeyListener() {
 			public void onHotkey(int id) {
 				switch(id) {
 					case LIST_ID:
-						notes.toggleVisible();
+						notesWindow.toggleVisible();
 						break;
 					case NEW_ID:
 						notes.createNote();
 						break;
 					case TAGS_ID:
-						notes.toggleTags();
+						notesWindow.toggleTags();
 						break;
 					case TRASH_ID:
-						notes.toggleTrash();
+						notesWindow.toggleTrash();
 						break;
 				}
 			}

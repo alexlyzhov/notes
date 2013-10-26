@@ -73,28 +73,6 @@ public class Notes extends Window {
 		});
 	}
 
-	public void toggleTags() {
-		showTags = !showTags;
-		vbox.togglePack();
-		for(Editor editor: editors) {
-			editor.toggleTags();
-		}
-	}
-
-	public boolean tagsShown() {
-		return showTags;
-	}
-
-	public void toggleTrash() {
-		if(showTrash) {
-			tagsList.removeTrash();
-			if(tagsList.lastSelected()) tagsList.selectAllRow();
-		} else {
-			tagsList.addTrash();
-		}
-		showTrash = !showTrash;
-	}
-
 	private class NewNoteButton extends Button {
 		private NewNoteButton() {
 			super("New note");
@@ -162,79 +140,38 @@ public class Notes extends Window {
     //================================================================================
 
 
-	public void openNote(Note note) {
-		new Editor(note, this);
+	public void toggleTags() {
+		showTags = !showTags;
+		vbox.togglePack();
+		for(Editor editor: editors) {
+			editor.toggleTags();
+		}
 	}
 
-	public void createNote() {
-		openNote(newNote());
+	public void toggleTrash() {
+		if(showTrash) {
+			tagsList.removeTrash();
+			if(tagsList.lastSelected()) tagsList.selectAllRow();
+		} else {
+			tagsList.addTrash();
+		}
+		showTrash = !showTrash;
+	}
+
+	public boolean tagsShown() {
+		return showTags;
+	}
+
+	public boolean trashShown() {
+		return showTrash;
 	}
 
 	public void updateTagsList() {
-		String selected = null;
-		if(!tagsList.nothingSelected()) {
-			selected = tagsList.getSelectedTag();
-		}
-		tagsList.clear();
-		for(Note note: notesData) {
-			tagsList.addNoteTags(note);
-		}
-		if(showTrash) {
-			tagsList.addTrash();
-		} 
-		TreeIter selectedRow = tagsList.getRow(selected);
-		if(selectedRow != null) tagsList.selectRow(selectedRow);
+		tagsList.update(notesData);
 	}
 
 	public void updateNotesList() {
-		if(!tagsList.nothingSelected()) {
-			String tag = tagsList.getSelectedTag();
-			notesList.clear();
-			for(Note note: notesData) {
-				if(noteInTag(note, tag)) {
-					notesList.addNote(note);
-				}
-			}
-			if(notesList.empty() && tag != null) {
-				System.out.println("recursively");
-				tagsList.selectAllRow();
-			}
-		}
-	}
-
-	private boolean noteInTag(Note note, String tag) {
-		String[] noteTags = note.getTags().split(",");
-		if(tag == null) {
-			for(String noteTag: noteTags) {
-				if(noteTag.equals("Trash")) {
-					return false;
-				}
-			}
-		} else if(!tag.equals("Trash")) {
-			for(String noteTag: noteTags) {
-				if(noteTag.equals("Trash")) {
-					return false;
-				}
-			}
-		}
-		if(tag == null) return true;
-		for(String noteTag: noteTags) {
-			if(noteTag.equals(tag)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public Note newNote() {
-		String tag = tagsList.getSelectedTag();
-		Note note = null;
-		if(tag == null) note = new Note();
-		else note = new Note(tag);
-		base.newNote(note);
-		notesData.add(note);
-		updateNotesList();
-		return note;
+		notesList.update(notesData, tagsList);
 	}
 
 	public void updateNote(Note note) {
@@ -243,31 +180,6 @@ public class Notes extends Window {
 
 	public void updateView(Note note) {
 		notesList.updateView(note);
-	}
-
-	public void removeNote(Note note) {
-		if(showTrash && tagsList.lastSelected()) {
-			removeNoteCompletely(note);
-		} else {
-			removeNoteToTrash(note);
-		}
-	}
-
-	public void removeNoteCompletely(Note note) {
-		notesData.remove(note);
-		base.removeNote(note);
-		updateNotesList();
-		updateTagsList();
-	}
-
-	public void removeNoteToTrash(Note note) {
-		String tags = note.getTags();
-		if(tags.equals("")) tags = "Trash";
-		else tags = tags + ",Trash";
-		note.setTags(tags);
-		updateNote(note);
-		updateNotesList();
-		updateTagsList();
 	}
 
 	public void startEditing(Note note) {
@@ -282,5 +194,51 @@ public class Notes extends Window {
 
 	public ArrayList<Editor> getEditors() {
 		return editors;
+	}
+
+
+
+	public void openNote(Note note) {
+		new Editor(note, this);
+	}
+
+	public void createNote() {
+		openNote(newNote());
+	}
+
+	public Note newNote() {
+		String tag = tagsList.getSelectedTag();
+		Note note = null;
+		if(tag == null) note = new Note();
+		else note = new Note(tag);
+		base.newNote(note);
+		notesData.add(note);
+		updateNotesList();
+		return note;
+	}
+
+	public void removeNote(Note note) {
+		if(showTrash && tagsList.lastSelected()) {
+			removeNoteCompletely(note);
+		} else {
+			removeNoteToTrash(note);
+		}
+	}
+
+	public void removeNoteCompletely(Note note) {
+		notesData.remove(note);
+		base.removeNote(note);
+		updateTagsList();
+		updateNotesList();
+	}
+
+	public void removeNoteToTrash(Note note) {
+		String tags = note.getTags();
+		if(tags.equals("")) tags = "Trash";
+		else tags = tags + ",Trash";
+		note.setTags(tags);
+		updateNote(note);
+		updateTagsList();
+		updateNotesList();
 	}
 }

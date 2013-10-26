@@ -1,6 +1,7 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.EventButton;
 import org.gnome.gdk.MouseButton;
+import java.util.ArrayList;
 
 public class NotesList extends ScrolledWindow {
 	private final Notes notes;
@@ -51,6 +52,45 @@ public class NotesList extends ScrolledWindow {
 
 	public void clear() {
 		model.clear();
+	}
+
+	public void update(ArrayList<Note> notesData, TagsList tagsList) {
+		if(!tagsList.nothingSelected()) {
+			String tag = tagsList.getSelectedTag();
+			clear();
+			for(Note note: notesData) {
+				if(noteInTag(note, tag)) {
+					addNote(note);
+				}
+			}
+			if(empty() && tag != null) {
+				tagsList.selectAllRow();
+			}
+		}
+	}
+
+	private boolean noteInTag(Note note, String tag) {
+		String[] noteTags = note.getTags().split(",");
+		if(tag == null) {
+			for(String noteTag: noteTags) {
+				if(noteTag.equals("Trash")) {
+					return false;
+				}
+			}
+		} else if(!tag.equals("Trash")) {
+			for(String noteTag: noteTags) {
+				if(noteTag.equals("Trash")) {
+					return false;
+				}
+			}
+		}
+		if(tag == null) return true;
+		for(String noteTag: noteTags) {
+			if(noteTag.equals(tag)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void addNote(Note note) {

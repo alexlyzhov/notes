@@ -1,5 +1,6 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.EventButton;
+import java.util.ArrayList;
 
 public class TagsList extends ScrolledWindow {
 	private final Notes notes;
@@ -38,6 +39,22 @@ public class TagsList extends ScrolledWindow {
 	public void clear() {
 		model.clear();
 		appendAllRow();
+	}
+
+	public void update(ArrayList<Note> notesData) {
+		String selected = null;
+		if(!nothingSelected()) {
+			selected = getSelectedTag();
+		}
+		clear();
+		for(Note note: notesData) {
+			addNoteTags(note);
+		}
+		if(notes.trashShown()) {
+			addTrash();
+		} 
+		TreeIter selectedRow = getRow(selected);
+		if(selectedRow != null) selectRow(selectedRow);
 	}
 
 	private void appendAllRow() {

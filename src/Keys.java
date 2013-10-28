@@ -5,6 +5,7 @@ public class Keys {
 	private final static int NEW_ID = 1;
 	private final static int TAGS_ID = 2;
 	private final static int TRASH_ID = 3;
+	private final static int EXIT_ID = 4;
 
 	private JXGrabKey gk;
 	private HotkeyListener listener;
@@ -27,6 +28,9 @@ public class Keys {
 					case TRASH_ID:
 						notesWindow.toggleTrash();
 						break;
+					case EXIT_ID:
+						notes.exit();
+						break;
 				}
 			}
 		};
@@ -36,15 +40,21 @@ public class Keys {
 			gk.registerX11Hotkey(NEW_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.APOSTROPHE); //Alt+Shift+'
 			gk.registerX11Hotkey(TAGS_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.BRACKET_RIGHT); //Alt+Shift+]
 			gk.registerX11Hotkey(TRASH_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.BRACKET_LEFT); //Alt+Shift+[
+			gk.registerX11Hotkey(EXIT_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.K); //Alt+Shift+K
 		} catch(HotkeyConflictException ex) {ex.printStackTrace();}
 	}
 
 	public void cleanUp() {
-		gk.unregisterHotKey(LIST_ID);
-		gk.unregisterHotKey(NEW_ID);
-		gk.unregisterHotKey(TAGS_ID);
-		gk.unregisterHotKey(TRASH_ID);
-		gk.removeHotkeyListener(listener);
-		gk.cleanUp();
+		new Thread () {
+			public void run() {
+				gk.unregisterHotKey(LIST_ID);
+				gk.unregisterHotKey(NEW_ID);
+				gk.unregisterHotKey(TAGS_ID);
+				gk.unregisterHotKey(TRASH_ID);
+				gk.unregisterHotKey(EXIT_ID);
+				gk.removeHotkeyListener(listener);
+				gk.cleanUp();
+			} 
+		}.start();
 	}
 }

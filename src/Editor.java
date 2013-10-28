@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class Editor extends Window {
+public class Editor extends Window { //text formatting
 	private Note note;
 	private Notes notes;
 	private boolean changed;
@@ -52,7 +52,8 @@ public class Editor extends Window {
 
 	private void setEditIcon() {
 		try {
-			Pixbuf edit = new Pixbuf("ico/edit.png");
+			String dir = System.getProperty("user.dir");
+			Pixbuf edit = new Pixbuf(dir + "/ico/edit.png");
 			setIcon(edit);
 		} catch(Exception ex) {ex.printStackTrace();}
 	}
@@ -67,7 +68,6 @@ public class Editor extends Window {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	notes.finishEditing(note);
 		    	if(note.empty()) notes.removeNoteCompletely(note);
-		    	// notes.getEditors().remove(this);
 		        return false;
 		    }
 		});
@@ -171,8 +171,6 @@ public class Editor extends Window {
 
 			setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
 			add(view);
-
-			if(!nameEntry.getText().equals("")) view.grabFocus();
 		}
 		private String getText() {
 			return buffer.getText();
@@ -192,6 +190,9 @@ public class Editor extends Window {
 			tagsEntry.show();
 			if(showTagsInfo) {
 				packTags();
+			}
+			if(!nameEntry.getText().equals("")) {
+				text.grabTextFocus();
 			}
 		}
 

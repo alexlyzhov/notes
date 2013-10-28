@@ -10,7 +10,7 @@ public class NotesWindow extends Window {
 	private TagsList tagsList;
 	private ScrolledWindow notesListWindow, tagsListWindow;
 	private boolean visible;
-	private boolean showTagsInfo = true;
+	private boolean showTagsInfo;
 	private NotesVBox vbox;
 	private ArrayList<Editor> editors = new ArrayList<Editor>();
 
@@ -62,7 +62,8 @@ public class NotesWindow extends Window {
 
 	private void setSunIcon() {
 		try {
-			Pixbuf sun = new Pixbuf("ico/sun.png");
+			String dir = System.getProperty("user.dir");
+			Pixbuf sun = new Pixbuf(dir + "/ico/sun.png");
 			setIcon(sun);
 		} catch(Exception ex) {ex.printStackTrace();}
 	}
@@ -81,8 +82,8 @@ public class NotesWindow extends Window {
 	private void exitOnDelete() {
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
-		    	notes.exit();
-		        return false;
+		    	toggleVisible();
+		    	return true;
 		    }
 		});
 	}
@@ -93,7 +94,8 @@ public class NotesWindow extends Window {
 
 			Pixbuf edit = null;
 			try {
-				edit = new Pixbuf("ico/edit.png");
+				String dir = System.getProperty("user.dir");
+				edit = new Pixbuf(dir + "/ico/edit.png");
 			} catch(Exception ex) {ex.printStackTrace();}
 			setImage(new Image(edit));
 

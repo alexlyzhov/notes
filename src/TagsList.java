@@ -84,11 +84,24 @@ public class TagsList {
 			}
 			return false;
 		}
+
+		public void clear() {
+			super.clear();
+			appendAllRow();
+		}
+
+		private void appendAllRow() {
+			TreeIter all = appendRow();
+			setValue(all, nameColumn, "All notes");
+			// selectAllRow();
+		}
 	}
 
 	private class TagsListTree extends TreeView { //pick selection subclass out
+		private TagsListModel model;
 		private TagsListTree(TagsListModel model) {
 			super(model);
+			this.model = model;
 			setHeadersVisible(false);
 			TreeViewColumn nameViewColumn = appendColumn();
 			nameViewColumn.setTitle("Tag");
@@ -106,7 +119,7 @@ public class TagsList {
 			});
 		}
 
-		public String getSelectedTag() { //is called
+		public String getSelectedTag() {
 			if(nothingSelected()) {
 				System.out.println("Error: call getSelectedTag() when nothing selected");
 				return null;
@@ -137,17 +150,6 @@ public class TagsList {
 			return tree.getSelection().getSelected().iterNext() == false;
 		}
 
-		public void clear() {
-			model.clear();
-			appendAllRow();
-		}
-
-		private void appendAllRow() {
-			TreeIter all = model.appendRow();
-			model.setValue(all, nameColumn, "All notes");
-			selectAllRow();
-		}
-
 		public void selectAllRow() {
 			selectRow(model.getAllRow());
 		}
@@ -156,7 +158,7 @@ public class TagsList {
 			getSelection().selectRow(row);
 		}
 
-		private void update(ArrayList<Note> notesData) {
+		private void update(ArrayList<Note> notesData) { //do not focus on "all" because of renaming current tag
 			String selected = null;
 			if(!nothingSelected()) {
 				selected = getSelectedTag();

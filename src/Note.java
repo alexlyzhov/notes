@@ -5,7 +5,7 @@ public class Note {
 	private boolean usable;
 	private boolean editing;
 
-	public Note(String name, String content, String tags, long id, String time) {
+	public Note(String name, String content, String tags, long id, String time) { //Notes objects DB serialization
 		this(name, content, tags);
 		initiate(id, time);
 	}

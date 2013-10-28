@@ -12,10 +12,10 @@ public class Notes {
 	public static void main(String[] args) {new Notes(args);}
 
 	public Notes(String[] args) {
-		base = new Base();
+		base = new Base(args);
 		notesData = base.getNotes();
 		Gtk.init(args);
-		notesList = new NotesList(this); //send notesData as a parameter
+		notesList = new NotesList(this);
 		tagsList = new TagsList(this);
 		updateTagsList();
 		window = new NotesWindow(args, this, notesList, tagsList);
@@ -25,8 +25,8 @@ public class Notes {
 
 	public void exit() {
 		base.closeQueue();
-		keys.cleanUp();
 		Gtk.mainQuit();
+		keys.cleanUp();
 	}
 
 	public void createNote() {
@@ -56,18 +56,20 @@ public class Notes {
 		} else {
 			removeNoteToTrash(note);
 		}
-		updateTagsList();
-		updateNotesList();
 	}
 
 	public void removeNoteCompletely(Note note) {
 		notesData.remove(note);
 		base.removeNote(note);
+		updateTagsList();
+		updateNotesList();
 	}
 
 	public void removeNoteToTrash(Note note) {
 		note.removeToTrash();
 		updateNote(note);
+		updateTagsList();
+		updateNotesList();
 	}
 
 	public void updateTagsList() {

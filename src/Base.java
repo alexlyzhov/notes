@@ -5,26 +5,38 @@ import java.util.ArrayList;
 public class Base {
 	private SQLiteQueue queue;
 
-	public Base() {
+	public Base(String[] args) {
 		java.util.logging.Logger.getLogger("com.almworks.sqlite4java").setLevel(java.util.logging.Level.OFF);
-		initQueue();
+		initQueue(args);
 		createTable();
 	}
 
-	private void initQueue() {
-		queue = new SQLiteQueue(new java.io.File("notes.db"));
+	private void initQueue(String[] args) {
+		boolean openNext = false;
+		for(String i: args) {
+			if(openNext) {
+				queue = new SQLiteQueue(new java.io.File(i));
+				break;
+			}
+			if(i.startsWith("db")) {
+				openNext = true;
+			}
+		}
+		if(queue == null) {
+			queue = new SQLiteQueue(new java.io.File("notes.db"));
+		}
 		queue.start();
 	}
 
 	public void closeQueue() {
 		if(queue != null) {
-			try {
+			try {	
 				queue.stop(true).join();
 			} catch(InterruptedException ex) {ex.printStackTrace();}
 		}
 	}
 
-	private void createTable() {
+	private void createTable() { //refactor DB code; handling DB exceptions
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;

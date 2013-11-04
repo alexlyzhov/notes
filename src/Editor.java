@@ -7,41 +7,31 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class Editor extends Window { //text formatting
+public class Editor extends Window {
 	private Note note;
 	private Notes notes;
 	private boolean changed;
 
 	private NameEntry nameEntry;
-	private TagsEntry tagsEntry;
 	private ScrolledText text;
 	private EditorVBox vbox;
 
-	public Editor(Note noteParam, Notes notesParam, boolean showTagsInfo) {
+	public Editor(Note noteParam) {
 		note = noteParam;
-		notes = notesParam;
+		notes = Notes.getInstance();
 		notes.startEditing(note);
 
 		setNameTitle();
 		setEditIcon();
 		setCenterLocation();
+		destroyOnDelete();
 		saveOnDelete();
 
 		nameEntry = new NameEntry(note.getName());
-		tagsEntry = new TagsEntry(tagsOutput(note.getTags()));
 		text = new ScrolledText(note.getContent());
-		vbox = new EditorVBox(nameEntry, tagsEntry, text, showTagsInfo);
+		vbox = new EditorVBox(nameEntry, text);
 		add(vbox);
 		showAll();
-	}
-
-	public void removeOnDelete(final ArrayList<Editor> editors) {
-		connect(new Window.DeleteEvent() {
-		    public boolean onDeleteEvent(Widget source, Event event) {
-		    	editors.remove(Editor.this);
-		        return false;
-		    }
-		});
 	}
 
 	private void setNameTitle() {
@@ -63,12 +53,27 @@ public class Editor extends Window { //text formatting
 		move(getScreen().getWidth() / 8 * 3, getScreen().getHeight() / 4);
 	}
 
-	private void saveOnDelete() {
+	private void destroyOnDelete() {
 		connect(new Window.DeleteEvent() {
-		    public boolean onDeleteEvent(Widget source, Event event) {
+			public boolean onDeleteEvent(Widget source, Event event) {
+				source.destroy();
+				return false;
+			}
+		});
+	}
+
+	private void saveOnDelete() {
+		connect(new Widget.Destroy() {
+		    public void onDestroy(Widget source) {
 		    	notes.finishEditing(note);
-		    	if(note.empty()) notes.removeNoteCompletely(note);
-		        return false;
+		    }
+		});
+	}
+
+	public void removeOnDelete(final ArrayList<Editor> editors) {
+		connect(new Widget.Destroy() {
+		    public void onDestroy(Widget source) {
+		    	editors.remove(this);
 		    }
 		});
 	}
@@ -77,41 +82,40 @@ public class Editor extends Window { //text formatting
 		changed = true;
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
-		saveTags();
 		notes.updateNote(note);
-		notes.updateTagsList();
+		// notes.updateTagsList();
 		notes.updateNotesList();
 	}
 
-	private String tagsOutput(String tags) {
-		ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
-		tags = "";
-		boolean addComma = false;
-		for(String piece: pieces) {
-			if(!addComma) addComma = true;
-			else tags = tags + ", ";
-			tags = tags + piece;
-		}
-		return tags;
-	}
+	// private String tagsOutput(String tags) {
+	// 	ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
+	// 	tags = "";
+	// 	boolean addComma = false;
+	// 	for(String piece: pieces) {
+	// 		if(!addComma) addComma = true;
+	// 		else tags = tags + ", ";
+	// 		tags = tags + piece;
+	// 	}
+	// 	return tags;
+	// }
 
-	private void saveTags() {
-		String tags = tagsEntry.getText();
-		ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
-		Iterator<String> iter = pieces.iterator();
-		tags = "";
-		boolean addComma = false;
-		while(iter.hasNext()) {
-			String piece = iter.next();
-			piece = piece.trim();
-			if(!piece.equals("")) {
-				if(!addComma) addComma = true;
-				else tags = tags += ",";
-				tags = tags += piece;
-			}	
-		}
-		note.setTags(tags);
-	}
+	// private void saveTags() {
+	// 	String tags = tagsEntry.getText();
+	// 	ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
+	// 	Iterator<String> iter = pieces.iterator();
+	// 	tags = "";
+	// 	boolean addComma = false;
+	// 	while(iter.hasNext()) {
+	// 		String piece = iter.next();
+	// 		piece = piece.trim();
+	// 		if(!piece.equals("")) {
+	// 			if(!addComma) addComma = true;
+	// 			else tags = tags += ",";
+	// 			tags = tags += piece;
+	// 		}	
+	// 	}
+	// 	note.setTags(tags);
+	// }
 
 	private class NameEntry extends Entry {
 		private NameEntry(String name) {
@@ -120,26 +124,6 @@ public class Editor extends Window { //text formatting
 				public void onChanged(Entry entry) {
 					updateNoteData();
 					setNameTitle();
-				}
-			});
-			connect(new Widget.KeyPressEvent() {
-				public boolean onKeyPressEvent(Widget source, EventKey event) {
-					if(event.getKeyval() == Keyval.Return) {
-						text.grabTextFocus();
-						return true;
-					}
-					return false;
-				}
-			});
-		}
-	}
-
-	private class TagsEntry extends Entry {
-		private TagsEntry(String tags) {
-			super(tags);
-			connect(new Entry.Changed() {
-				public void onChanged(Entry entry) {
-					updateNoteData();
 				}
 			});
 			connect(new Widget.KeyPressEvent() {
@@ -181,35 +165,13 @@ public class Editor extends Window { //text formatting
 	}
 
 	private class EditorVBox extends VBox {
-		private TagsEntry tagsEntry = null;
-		private EditorVBox(NameEntry nameEntry, TagsEntry tagsEntry, ScrolledText text, boolean showTagsInfo) {
+		private EditorVBox(NameEntry nameEntry, ScrolledText text) {
 			super(false, 0);
 			packStart(nameEntry, false, false, 0);
 			packEnd(text, true, true, 0);
-			this.tagsEntry = tagsEntry;
-			tagsEntry.show();
-			if(showTagsInfo) {
-				packTags();
-			}
 			if(!nameEntry.getText().equals("")) {
 				text.grabTextFocus();
 			}
 		}
-
-		private void toggleTags() {
-			if(Arrays.asList(getChildren()).contains(tagsEntry)) {
-				remove(tagsEntry);
-			} else {
-				packTags();
-			}
-		}
-
-		private void packTags() {
-			packStart(tagsEntry, false, false, 0);
-		}
-	}
-
-	public void toggleTags() {
-		vbox.toggleTags();
 	}
 }

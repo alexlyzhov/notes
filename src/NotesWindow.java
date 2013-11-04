@@ -5,17 +5,14 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 public class NotesWindow extends Window {
-	private Notes notes;
-	private NotesList notesList;
-	private TagsList tagsList;
+	private ArrayList<Editor> editors = new ArrayList<Editor>();
+	final private NotesList notesList;
+	final private TagsList tagsList;
 	private ScrolledWindow notesListWindow, tagsListWindow;
 	private boolean visible;
-	private boolean showTagsInfo;
 	private NotesVBox vbox;
-	private ArrayList<Editor> editors = new ArrayList<Editor>();
 
-	public NotesWindow(String[] args, Notes notes, NotesList notesList, TagsList tagsList) {
-		this.notes = notes;
+	public NotesWindow(String[] args, NotesList notesList, TagsList tagsList) {
 		this.notesList = notesList;
 		this.tagsList = tagsList;
 		this.notesListWindow = notesList.getScrolledWindow();
@@ -32,21 +29,15 @@ public class NotesWindow extends Window {
 	}
 
 	public void newEditor(Note note) {
-		Editor editor = new Editor(note, notes, showTagsInfo);
+		Editor editor = new Editor(note);
 		editors.add(editor);
 		editor.removeOnDelete(editors);
 	}
 
-	public void toggleTags() {
-		showTagsInfo = !showTagsInfo;
-		vbox.togglePack();
+	public void destroyEditors() {
 		for(Editor editor: editors) {
-			editor.toggleTags();
+			editor.destroy();
 		}
-	}
-
-	public void toggleTrash() {
-		tagsList.toggleTrash();
 	}
 
 	private boolean runHidden(String args[]) {
@@ -101,7 +92,7 @@ public class NotesWindow extends Window {
 
 			connect(new Button.Clicked() {
 				public void onClicked(Button button) {
-					notes.createNote();
+					Notes.getInstance().createNote();
 				}
 			});
 		}
@@ -124,9 +115,12 @@ public class NotesWindow extends Window {
 			paned = new PanedLists(notesListWindow, tagsListWindow);
 			packStart(button, false, false, 0);
 			packEnd(paned, true, true, 0);
+			if(tagsList.noTags()) {
+				showNotesList();
+			}
 		}
 
-		private void togglePack() {
+		private void showNotesList() {
 			Widget[] elems = getChildren();
 			if(Arrays.asList(elems).contains(paned)) {
 				remove(paned);
@@ -136,7 +130,12 @@ public class NotesWindow extends Window {
 					}
 				}
 				packEnd(notesListWindow, true, true, 0);
-			} else if(Arrays.asList(elems).contains(notesListWindow)) {
+			}
+		}
+
+		private void showPaned() {
+			Widget[] elems = getChildren();
+			if(Arrays.asList(elems).contains(notesListWindow)) {
 				boolean listInPaned = false;
 				for(Widget widget: paned.getChildren()) {
 					if(widget.equals(notesListWindow)) listInPaned = true;
@@ -146,7 +145,15 @@ public class NotesWindow extends Window {
 					paned.add1(notesListWindow);
 				}
 				packEnd(paned, true, true, 0);
-			} else System.out.println("Nothing to toggle and pack about");
+			}
 		}
+	}
+
+	public void showNotesList() {
+		vbox.showNotesList();
+	}
+
+	public void showPaned() {
+		vbox.showPaned();
 	}
 }

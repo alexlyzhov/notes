@@ -36,7 +36,7 @@ public class Base {
 		}
 	}
 
-	private void createTable() { //refactor DB code; handling DB exceptions
+	private void createTable() {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;

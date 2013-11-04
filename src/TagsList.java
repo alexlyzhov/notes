@@ -3,15 +3,13 @@ import org.gnome.gdk.EventButton;
 import java.util.ArrayList;
 
 public class TagsList {
-	private final Notes notes;
 	private final DataColumnString nameColumn = new DataColumnString();
 	private final DataColumn[] columns = {nameColumn};
 	private TagsListModel model;
 	private TagsListTree tree;
-	private boolean showTrash = false;
+	private boolean trashShown;
 
-	public TagsList(Notes notesParam) {
-		this.notes = notesParam;
+	public TagsList() {
 		model = new TagsListModel(columns);
 		tree = new TagsListTree(model);
 	}
@@ -63,16 +61,7 @@ public class TagsList {
 		public void addTrash() {
 			TreeIter row = appendRow();
 			setValue(row, nameColumn, "Trash");
-		}
-
-		public void removeTrash() {
-			TreeIter row = getIterFirst();
-			TreeIter trashRow = null;
-			while(true) {
-				trashRow = row.copy();
-				if(row.iterNext() == false) break;
-			}
-			removeRow(trashRow);
+			trashShown = true;
 		}
 
 		private boolean tagExists(String tag) {
@@ -93,7 +82,6 @@ public class TagsList {
 		private void appendAllRow() {
 			TreeIter all = appendRow();
 			setValue(all, nameColumn, "All notes");
-			// selectAllRow();
 		}
 	}
 
@@ -113,7 +101,7 @@ public class TagsList {
 			getSelection().connect(new TreeSelection.Changed() {
 				public void onChanged(TreeSelection selection) {
 					if(!nothingSelected()) {
-						notes.updateNotesList();
+						Notes.getInstance().updateNotesList();
 					}
 				}
 			});
@@ -158,7 +146,18 @@ public class TagsList {
 			getSelection().selectRow(row);
 		}
 
-		private void update(ArrayList<Note> notesData) { //do not focus on "all" because of renaming current tag
+		private boolean trashTagExists(ArrayList<Note> notesData) {
+			for(Note note: notesData) {
+				for(String tag: note.getTags().split(",")) {
+					if(tag.equals("Trash")) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		private void update(ArrayList<Note> notesData) {
 			String selected = null;
 			if(!nothingSelected()) {
 				selected = getSelectedTag();
@@ -167,21 +166,15 @@ public class TagsList {
 			for(Note note: notesData) {
 				model.addNoteTags(note);
 			}
-			if(showTrash) {
+			if(trashTagExists(notesData)) {
 				model.addTrash();
-			} 
+			}
 			TreeIter selectedRow = model.getRow(selected);
 			if(selectedRow != null) {
 				selectRow(selectedRow);
 			} else {
 				selectAllRow();
 			}
-		}
-
-		private void removeTrash() {
-			boolean nullSelection = trashSelected();
-			model.removeTrash();
-			if(nullSelection) selectAllRow();
 		}
 	}
 
@@ -205,17 +198,8 @@ public class TagsList {
 		tree.update(notesData);
 	}
 
-	public void toggleTrash() {
-		if(showTrash) {
-			tree.removeTrash();
-		} else {
-			model.addTrash();
-		}
-		showTrash = !showTrash;
-	}
-
 	public boolean trashSelected() {
-		if(showTrash && tree.lastSelected()) return true;
+		if(trashShown && tree.lastSelected()) return true;
 		return false;
 	}
 
@@ -229,5 +213,9 @@ public class TagsList {
 
 	public boolean nothingSelected() {
 		return tree.nothingSelected();
+	}
+
+	public boolean noTags() {
+		return !model.getIterFirst().iterNext();
 	}
 }

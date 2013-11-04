@@ -4,7 +4,6 @@ import org.gnome.gdk.MouseButton;
 import java.util.ArrayList;
 
 public class NotesList {
-	private final Notes notes;
 	private NotesListModel model;
 	private NotesListTree tree;
 	private final DataColumnString nameColumn = new DataColumnString();
@@ -12,8 +11,7 @@ public class NotesList {
 	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
 	private final DataColumn[] columns = new DataColumn[] {nameColumn, timeColumn, noteColumn};
 
-	public NotesList(Notes notesParam) {
-		this.notes = notesParam;
+	public NotesList() {
 		model = new NotesListModel(columns);
 		tree = new NotesListTree(model);
 	}
@@ -90,10 +88,13 @@ public class NotesList {
 						TreeIter row = model.getIter(path);
 						Note note = model.getNote(row);
 						if(!note.isEditing()) {
-							if(event.getButton() == MouseButton.LEFT) {
-								notes.openNote(note);
-							} else if(event.getButton() == MouseButton.RIGHT) {
-								notes.removeNote(note);
+							MouseButton b = event.getButton();
+							if(b == MouseButton.LEFT) {
+								Notes.getInstance().openNote(note);
+							} else if(b == MouseButton.MIDDLE) {
+								Notes.getInstance().removeNote(note);
+							} else if(b == MouseButton.RIGHT) {
+								System.out.println("rightclick");
 							}
 						}
 					}

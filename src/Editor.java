@@ -70,10 +70,10 @@ public class Editor extends Window {
 		});
 	}
 
-	public void removeOnDelete(final ArrayList<Editor> editors) {
+	public void removeOnDelete(final ArrayList<Window> children) {
 		connect(new Widget.Destroy() {
 		    public void onDestroy(Widget source) {
-		    	editors.remove(this);
+		    	children.remove(this);
 		    }
 		});
 	}
@@ -83,39 +83,8 @@ public class Editor extends Window {
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
 		notes.updateNote(note);
-		// notes.updateTagsList();
 		notes.updateNotesList();
 	}
-
-	// private String tagsOutput(String tags) {
-	// 	ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
-	// 	tags = "";
-	// 	boolean addComma = false;
-	// 	for(String piece: pieces) {
-	// 		if(!addComma) addComma = true;
-	// 		else tags = tags + ", ";
-	// 		tags = tags + piece;
-	// 	}
-	// 	return tags;
-	// }
-
-	// private void saveTags() {
-	// 	String tags = tagsEntry.getText();
-	// 	ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
-	// 	Iterator<String> iter = pieces.iterator();
-	// 	tags = "";
-	// 	boolean addComma = false;
-	// 	while(iter.hasNext()) {
-	// 		String piece = iter.next();
-	// 		piece = piece.trim();
-	// 		if(!piece.equals("")) {
-	// 			if(!addComma) addComma = true;
-	// 			else tags = tags += ",";
-	// 			tags = tags += piece;
-	// 		}	
-	// 	}
-	// 	note.setTags(tags);
-	// }
 
 	private class NameEntry extends Entry {
 		private NameEntry(String name) {

@@ -47,7 +47,6 @@ public class NotesList {
 			String name = note.getName();
 			if(name.equals("")) name = "Nameless";
 			if(note.isEditing()) {
-				// name = name + " *";
 				name = "<b>" + name + "</b>";
 			}
 			setValue(row, nameColumn, name);
@@ -93,11 +92,11 @@ public class NotesList {
 						if(!note.isEditing()) {
 							MouseButton b = event.getButton();
 							if(b == MouseButton.LEFT) {
-								Notes.getInstance().openNote(note);
+								Notes.getInstance().getWindow().newEditor(note);
 							} else if(b == MouseButton.MIDDLE) {
 								Notes.getInstance().removeNote(note);
 							} else if(b == MouseButton.RIGHT) {
-								System.out.println("rightclick");
+								Notes.getInstance().getWindow().newProperties(note);
 							}
 						}
 					}

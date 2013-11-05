@@ -37,7 +37,7 @@ public class Notes {
 	}
 
 	public void exit() {
-		window.destroyEditors();
+		window.destroyChildren();
 		base.closeQueue();
 		Gtk.mainQuit();
 		keys.cleanUp();
@@ -46,7 +46,7 @@ public class Notes {
 	public void createNote() {
 		Note note = newNote();
 		addNote(note);
-		openNote(note);
+		window.newEditor(note);
 	}
 
 	private Note newNote() {
@@ -60,10 +60,6 @@ public class Notes {
 		updateNotesList();
 	}
 
-	public void openNote(Note note) {
-		window.newEditor(note);
-	}
-
 	public void removeNote(Note note) {
 		if(tagsList.trashSelected()) {
 			removeNoteCompletely(note);
@@ -75,15 +71,13 @@ public class Notes {
 	public void removeNoteCompletely(Note note) {
 		notesData.remove(note);
 		base.removeNote(note);
-		updateTagsList();
-		updateNotesList();
+		updateInfo();
 	}
 
 	public void removeNoteToTrash(Note note) {
 		note.removeToTrash();
 		updateNote(note);
-		updateTagsList();
-		updateNotesList();
+		updateInfo();
 	}
 
 	public void updateTagsList() {
@@ -99,6 +93,11 @@ public class Notes {
 
 	public void updateNotesList() {
 		notesList.update(notesData, tagsList);
+	}
+
+	public void updateInfo() {
+		updateTagsList();
+		updateNotesList();
 	}
 
 	public void updateNote(Note note) {

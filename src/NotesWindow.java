@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 public class NotesWindow extends Window {
-	private ArrayList<Editor> editors = new ArrayList<Editor>();
+	private ArrayList<Window> children = new ArrayList<Window>();
 	final private NotesList notesList;
 	final private TagsList tagsList;
 	private ScrolledWindow notesListWindow, tagsListWindow;
@@ -30,13 +30,19 @@ public class NotesWindow extends Window {
 
 	public void newEditor(Note note) {
 		Editor editor = new Editor(note);
-		editors.add(editor);
-		editor.removeOnDelete(editors);
+		children.add(editor);
+		editor.removeOnDelete(children);
 	}
 
-	public void destroyEditors() {
-		for(Editor editor: editors) {
-			editor.destroy();
+	public void newProperties(Note note) {
+		Properties properties = new Properties(note);
+		children.add(properties);
+		properties.removeOnDelete(children);
+	}
+
+	public void destroyChildren() {
+		for(Window window: children) {
+			window.destroy();
 		}
 	}
 

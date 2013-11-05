@@ -46,7 +46,10 @@ public class NotesList {
 			Note note = getNote(row);
 			String name = note.getName();
 			if(name.equals("")) name = "Nameless";
-			if(note.isEditing()) name = name + " *";
+			if(note.isEditing()) {
+				// name = name + " *";
+				name = "<b>" + name + "</b>";
+			}
 			setValue(row, nameColumn, name);
 		}
 
@@ -75,7 +78,7 @@ public class NotesList {
 			setHeadersVisible(false);
 			TreeViewColumn nameViewColumn = appendColumn();
 			nameViewColumn.setTitle("Name");
-			new CellRendererText(nameViewColumn).setText(nameColumn);
+			new CellRendererText(nameViewColumn).setMarkup(nameColumn);
 			connectToAction();
 		}
 

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
+import org.gnome.gdk.EventKey;
+import org.gnome.gdk.Keyval;
 
 public class Properties extends Dialog {
 	private Note note;
@@ -24,6 +26,16 @@ public class Properties extends Dialog {
 
 		add(new Label("Tags separated by comma: "));
 		tagsEntry = new Entry(tagsOutput(note.getTags()));
+		tagsEntry.connect(new Widget.KeyPressEvent() {
+			public boolean onKeyPressEvent(Widget source, EventKey event) {
+				if(event.getKeyval() == Keyval.Return) {
+					saveAndUpdate();
+					destroy();
+					return true;
+				}
+				return false;
+			}
+		});
 		removeButton = new Button("Delete note");
 		removeButton.connect(new Button.Clicked() {
 			public void onClicked(Button source) {
@@ -43,8 +55,9 @@ public class Properties extends Dialog {
 				if(responseType == ResponseType.CANCEL) {
 					destroy();
 				} else if(responseType == ResponseType.OK) {
-					save();
-					notes.updateInfo();
+					if(tagsChanged()) {
+						saveAndUpdate();
+					}
 					destroy();
 				}
 			}
@@ -52,6 +65,10 @@ public class Properties extends Dialog {
 
 		showAll();
 		present();
+	}
+
+	private boolean tagsChanged() {
+		return !note.getTags().equals(tagsOutput(tagsEntry.getText()));
 	}
 
 	private void destroyOnDelete() {
@@ -95,7 +112,11 @@ public class Properties extends Dialog {
 
 	private void save() {
 		saveTags();
-		notes.updateNote(note);
+	}
+
+	private void saveAndUpdate() {
+		save();
+		notes.updateInfo();
 	}
 
 	private void removeNote() {
@@ -130,5 +151,6 @@ public class Properties extends Dialog {
 			}	
 		}
 		note.setTags(tags);
+		notes.updateNoteTags(note);
 	}
 }

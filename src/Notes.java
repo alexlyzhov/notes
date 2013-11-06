@@ -76,7 +76,7 @@ public class Notes {
 
 	public void removeNoteToTrash(Note note) {
 		note.removeToTrash();
-		updateNote(note);
+		base.updateNoteTags(note);
 		updateInfo();
 	}
 
@@ -104,6 +104,10 @@ public class Notes {
 		base.updateNote(note, notesList);
 	}
 
+	public void updateNoteTags(Note note) {
+		base.updateNoteTags(note);
+	}
+
 	public void startEditing(Note note) {
 		note.startEditing();
 		notesList.updateView(note);
@@ -113,8 +117,9 @@ public class Notes {
 		note.finishEditing();
     	if(note.empty()) {
     		removeNoteCompletely(note);
+    	} else {
+    		notesList.updateView(note);
     	}
-		notesList.updateView(note);
 	}
 
 	public NotesWindow getWindow() {

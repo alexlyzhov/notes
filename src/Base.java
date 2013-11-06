@@ -1,5 +1,4 @@
 import com.almworks.sqlite4java.*;
-import org.gnome.gtk.*;
 import java.util.ArrayList;
 
 public class Base {
@@ -77,8 +76,8 @@ public class Base {
 	    			st = con.prepare("SELECT datetime('now')");
 	    			st.step();
 	    			note.updateTime(st.columnString(0));
-	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ?, tags = ? WHERE id = ?");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getTags()); st.bind(5, note.getID());
+	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ? WHERE id = ?");
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getID());
 	    			st.step();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
@@ -86,6 +85,21 @@ public class Base {
 		    }
 		    protected void jobFinished(Object nullObject) {
 		    	notesList.updateView(note);
+		    }
+		});
+	}
+
+	public void updateNoteTags(final Note note) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("UPDATE Notes SET tags = ? WHERE id = ?");
+	    			st.bind(1, note.getTags()); st.bind(2, note.getID());
+	    			st.step();
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
 		    }
 		});
 	}

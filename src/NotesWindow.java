@@ -32,6 +32,7 @@ public class NotesWindow extends Window {
 		Editor editor = new Editor(note);
 		children.add(editor);
 		editor.removeOnDelete(children);
+		Notes.getInstance().startEditing(note);
 	}
 
 	public void newProperties(Note note) {
@@ -136,6 +137,7 @@ public class NotesWindow extends Window {
 					}
 				}
 				packEnd(notesListWindow, true, true, 0);
+				showAll();
 			}
 		}
 
@@ -144,13 +146,16 @@ public class NotesWindow extends Window {
 			if(Arrays.asList(elems).contains(notesListWindow)) {
 				boolean listInPaned = false;
 				for(Widget widget: paned.getChildren()) {
-					if(widget.equals(notesListWindow)) listInPaned = true;
+					if(widget.equals(notesListWindow)) {
+						listInPaned = true;
+					}
 				}
 				remove(notesListWindow);
 				if(listInPaned == false) {
 					paned.add1(notesListWindow);
 				}
 				packEnd(paned, true, true, 0);
+				showAll();
 			}
 		}
 	}

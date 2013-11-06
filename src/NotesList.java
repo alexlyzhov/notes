@@ -64,6 +64,7 @@ public class NotesList {
 
 		private TreeIter getRow(Note note) {
 			TreeIter row = getIterFirst();
+			if(row == null) return null;
 			do {
 				if(getNote(row).equals(note)) return row;
 			} while(row.iterNext());

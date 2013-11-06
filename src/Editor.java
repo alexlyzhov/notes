@@ -19,7 +19,6 @@ public class Editor extends Window {
 	public Editor(Note noteParam) {
 		note = noteParam;
 		notes = Notes.getInstance();
-		notes.startEditing(note);
 
 		setNameTitle();
 		setEditIcon();

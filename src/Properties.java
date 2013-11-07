@@ -104,8 +104,7 @@ public class Properties extends Dialog {
 
 	private void setPropertiesIcon() {
 		try {
-			String dir = System.getProperty("user.dir");
-			Pixbuf properties = new Pixbuf(dir + "/ico/properties.png");
+			Pixbuf properties = new Pixbuf("ico/properties.png");
 			setIcon(properties);
 		} catch(Exception ex) {ex.printStackTrace();}
 	}

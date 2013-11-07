@@ -41,8 +41,7 @@ public class Editor extends Window {
 
 	private void setEditIcon() {
 		try {
-			String dir = System.getProperty("user.dir");
-			Pixbuf edit = new Pixbuf(dir + "/ico/edit.png");
+			Pixbuf edit = new Pixbuf("ico/edit.png");
 			setIcon(edit);
 		} catch(Exception ex) {ex.printStackTrace();}
 	}

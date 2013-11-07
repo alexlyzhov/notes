@@ -60,8 +60,9 @@ public class NotesWindow extends Window {
 
 	private void setSunIcon() {
 		try {
-			String dir = System.getProperty("user.dir");
-			Pixbuf sun = new Pixbuf(dir + "/ico/sun.png");
+			// String dir = System.getProperty("user.dir");
+			// Pixbuf sun = new Pixbuf(dir + "/ico/sun.png");
+			Pixbuf sun = new Pixbuf("ico/sun.png");
 			setIcon(sun);
 		} catch(Exception ex) {ex.printStackTrace();}
 	}

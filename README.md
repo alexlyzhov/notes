@@ -11,8 +11,8 @@ controls
 <code>Middle click</code> - remove note to trash or forever
 
 JXGrabKey global hotkeys:<br>
-- <code>Alt+Shift+:</code> - show/hide notes list<br>
-- <code>Alt+Shift+'</code> - create new note<br>
+- <code>Enter on keypad</code> - show/hide notes list<br>
+- <code>Plus on keypad</code> - create new note<br>
 - <code>Alt+Shift+Q</code> - quit application
 
 Parameters:<br>

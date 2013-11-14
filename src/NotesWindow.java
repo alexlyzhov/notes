@@ -93,8 +93,8 @@ public class NotesWindow extends Window {
 
 			Pixbuf edit = null;
 			try {
-				String dir = System.getProperty("user.dir");
-				edit = new Pixbuf(dir + "/ico/edit.png");
+				edit = new Pixbuf("ico/edit.png");
+				// edit = new Pixbuf(getClass().getResource("ico/edit.png").getPath());
 			} catch(Exception ex) {ex.printStackTrace();}
 			setImage(new Image(edit));
 

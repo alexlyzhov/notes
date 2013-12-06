@@ -1,6 +1,6 @@
 import org.gnome.gtk.Gtk;
 import java.util.ArrayList;
-
+//notes.db is in the directory of the startup script; it should be in the jar directory
 public class Notes {
 	private static Notes notes;
 	private String[] args;

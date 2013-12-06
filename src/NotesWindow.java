@@ -35,6 +35,16 @@ public class NotesWindow extends Window {
 		Notes.getInstance().startEditing(note);
 	}
 
+	public void closeEditor(Note note) {
+		for(Window i: children) {
+			if(i instanceof Editor) {
+				if(((Editor)i).getNoteID() == note.getID()) {
+					((Editor)i).destroy();
+				}
+			}
+		}
+	}
+
 	public void newProperties(Note note) {
 		Properties properties = new Properties(note);
 		children.add(properties);

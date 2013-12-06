@@ -1,6 +1,6 @@
 import com.almworks.sqlite4java.*;
 import java.util.ArrayList;
-
+import java.net.URLDecoder;
 public class Base {
 	private SQLiteQueue queue;
 
@@ -11,10 +11,14 @@ public class Base {
 	}
 
 	private void initQueue(String[] args) {
+		String absPath = "";
+		try {
+			absPath = URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
+		} catch(Exception ex) {ex.printStackTrace();}
 		boolean openNext = false;
 		for(String i: args) {
 			if(openNext) {
-				queue = new SQLiteQueue(new java.io.File(i));
+				queue = new SQLiteQueue(new java.io.File(absPath + i));
 				break;
 			}
 			if(i.startsWith("db")) {
@@ -22,7 +26,7 @@ public class Base {
 			}
 		}
 		if(queue == null) {
-			queue = new SQLiteQueue(new java.io.File("notes.db"));
+			queue = new SQLiteQueue(new java.io.File(absPath + "notes.db"));
 		}
 		queue.start();
 	}

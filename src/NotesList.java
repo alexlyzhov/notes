@@ -90,11 +90,15 @@ public class NotesList {
 						NotesListModel model = (NotesListModel) getModel();
 						TreeIter row = model.getIter(path);
 						Note note = model.getNote(row);
-						if(!note.isEditing()) {
-							MouseButton b = event.getButton();
-							if(b == MouseButton.LEFT) {
+						MouseButton b = event.getButton();
+						if(b == MouseButton.LEFT) {
+							if(!note.isEditing()) {
 								Notes.getInstance().getWindow().newEditor(note);
-							} else if(b == MouseButton.MIDDLE) {
+							} else {
+								Notes.getInstance().getWindow().closeEditor(note);
+							}
+						} else if(!note.isEditing()) {
+							if(b == MouseButton.MIDDLE) {
 								Notes.getInstance().removeNote(note);
 							} else if(b == MouseButton.RIGHT) {
 								Notes.getInstance().getWindow().newProperties(note);

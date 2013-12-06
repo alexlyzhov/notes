@@ -76,6 +76,10 @@ public class Editor extends Window {
 		});
 	}
 
+	public int getNoteID() {
+		return (int) note.getID();
+	}
+
 	private void updateNoteData() {
 		changed = true;
 		note.setName(nameEntry.getText());

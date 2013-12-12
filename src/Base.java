@@ -12,9 +12,9 @@ public class Base {
 
 	private void initQueue(String[] args) {
 		String absPath = "";
-		try {
-			absPath = URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
-		} catch(Exception ex) {ex.printStackTrace();}
+		// try {
+		// 	absPath = URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
+		// } catch(Exception ex) {ex.printStackTrace();}
 		boolean openNext = false;
 		for(String i: args) {
 			if(openNext) {

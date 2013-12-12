@@ -1,47 +1,84 @@
 import jxgrabkey.*;
+import java.util.ArrayList;
 
 public class Keys {
-	private final static int LIST_ID = 0;
-	private final static int NEW_ID = 1;
-	private final static int EXIT_ID = 4;
+	private enum Key {
+		//Default hotkeys:
+		//enter on keypad to show notes list
+		//plus on keypad to create new note
+		//Alt+Shift+Q to exit the application
+		LIST_ID("list", 0, X11KeysymDefinitions.KP_ENTER),
+		NEW_ID("new", 0, X11KeysymDefinitions.KP_ADD),
+		EXIT_ID("exit", X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.Q);
+
+		public final String name;
+		public int mask;
+		public int code;
+
+		Key(String name, int mask, int code) {
+			this.name = name;
+			this.mask = mask;
+			this.code = code;
+		}
+	};
 
 	private JXGrabKey gk;
 	private HotkeyListener listener;
 
-	public Keys() {
+	public Keys(String[] args) {
 		final Notes notes = Notes.getInstance();
 		final NotesWindow notesWindow = notes.getWindow();
 		System.loadLibrary("JXGrabKey");
 		gk = JXGrabKey.getInstance();
+		int state = 0;
+		Key c = null;
+		for(String i: args) {
+			if(state == 0) {
+				for(Key key: Key.values()) {
+					if(i.equals(key.name)) {
+						state = 1;
+						c = key;
+					}
+				}
+			} else if(state == 1) {
+				c.mask = Integer.parseInt(i);
+				state = 2;
+			} else if(state == 2) {
+				c.code = Integer.parseInt(i);
+				state = 0;
+			}
+		}
+
+		try {
+			for(int i = 0; i < Key.values().length; i++) {
+				gk.registerX11Hotkey(i, Key.values()[i].mask, Key.values()[i].code);
+			}
+		} catch(HotkeyConflictException ex) {ex.printStackTrace();}
+
 		listener = new HotkeyListener() {
 			public void onHotkey(int id) {
-				switch(id) {
-					case LIST_ID:
+				switch(Key.values()[id].name) {
+					case "list":
 						notesWindow.toggleVisible();
 						break;
-					case NEW_ID:
+					case "new":
 						notes.createNote();
 						break;
-					case EXIT_ID:
+					case "exit":
 						notes.exit();
 						break;
 				}
 			}
 		};
 		gk.addHotkeyListener(listener);
-		try {
-			gk.registerX11Hotkey(LIST_ID, 0, X11KeysymDefinitions.KP_ENTER); //Enter on keypad
-			gk.registerX11Hotkey(NEW_ID, 0, X11KeysymDefinitions.KP_ADD); //Plus on keypad
-			gk.registerX11Hotkey(EXIT_ID, X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.Q); //Alt+Shift+Q
-		} catch(HotkeyConflictException ex) {ex.printStackTrace();}
 	}
 
 	public void cleanUp() {
 		new Thread() {
 			public void run() {
-				gk.unregisterHotKey(LIST_ID);
-				gk.unregisterHotKey(NEW_ID);
-				gk.unregisterHotKey(EXIT_ID);
+				for(int i = 0; i < Key.values().length; i++) {
+					gk.unregisterHotKey(i);
+				}
 				gk.removeHotkeyListener(listener);
 				gk.cleanUp();
 			} 

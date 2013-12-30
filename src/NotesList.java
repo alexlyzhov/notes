@@ -6,19 +6,19 @@ import java.util.ArrayList;
 public class NotesList {
 	private NotesListModel model;
 	private NotesListTree tree;
-	private final DataColumnString nameColumn = new DataColumnString();
-	private final DataColumnString timeColumn = new DataColumnString();
-	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
-	private final DataColumn[] columns = new DataColumn[] {nameColumn, timeColumn, noteColumn};
 
 	public NotesList() {
-		model = new NotesListModel(columns);
+		model = new NotesListModel();
 		tree = new NotesListTree(model);
 	}
 
 	private class NotesListModel extends ListStore {
+		private final DataColumnString nameColumn = new DataColumnString();
+		private final DataColumnString timeColumn = new DataColumnString();
+		private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
+		private final DataColumn[] columns = new DataColumn[] {nameColumn, timeColumn, noteColumn};
 
-		private NotesListModel(DataColumn[] columns) {
+		private NotesListModel() {
 			super(columns);
 			setSortColumn(timeColumn, SortType.DESCENDING);
 		}
@@ -72,17 +72,17 @@ public class NotesList {
 		}
 	}
 
-	private class NotesListTree extends TreeView {
+	private class NotesListTree extends ListTree {
 		private NotesListTree(NotesListModel model) {
 			super(model);
-			setHeadersVisible(false);
-			TreeViewColumn nameViewColumn = appendColumn();
-			nameViewColumn.setTitle("Name");
-			new CellRendererText(nameViewColumn).setMarkup(nameColumn);
-			connectToAction();
+			// setHeadersVisible(false);
+			// TreeViewColumn nameViewColumn = appendColumn();
+			// // nameViewColumn.setTitle("Name");
+			// new CellRendererText(nameViewColumn).setMarkup(nameColumn);
+			// connectToAction();
 		}
 
-		private void connectToAction() {
+		protected void connectToAction() {
 			connect(new Widget.ButtonPressEvent() {
 				public boolean onButtonPressEvent(Widget source, EventButton event) {
 					TreePath path = getPathAtPos((int) event.getX(), (int) event.getY());

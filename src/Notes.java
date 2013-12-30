@@ -56,7 +56,6 @@ public class Notes {
 
 	public void openNote(Note note) {
 		window.newEditor(note);
-		startEditing(note);
 	}
 
 	public void openNewNote() {
@@ -90,11 +89,7 @@ public class Notes {
 	public void updateTagsList() {
 		tagsList.update(notesData);
 		if(window != null) {
-			if(tagsList.noTags()) {
-				window.showNotesList();
-			} else {
-				window.showPaned();
-			}
+			window.updateLists();
 		}
 	}
 

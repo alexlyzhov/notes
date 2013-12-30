@@ -3,14 +3,10 @@ import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
 import org.gnome.gdk.Keyval;
 import org.gnome.gdk.EventKey;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class Editor extends Window {
 	private Note note;
 	private Notes notes;
-	private boolean changed;
 
 	private NameEntry nameEntry;
 	private ScrolledText text;
@@ -19,12 +15,13 @@ public class Editor extends Window {
 	public Editor(Note noteParam) {
 		note = noteParam;
 		notes = Notes.getInstance();
+		notes.startEditing(note);
 
 		setNameTitle();
 		setEditIcon();
 		setCenterLocation();
 		destroyOnDelete();
-		saveOnDelete();
+		closeOnDelete();
 
 		nameEntry = new NameEntry(note.getName());
 		text = new ScrolledText(note.getContent());
@@ -60,18 +57,10 @@ public class Editor extends Window {
 		});
 	}
 
-	private void saveOnDelete() {
+	private void closeOnDelete() {
 		connect(new Widget.Destroy() {
 		    public void onDestroy(Widget source) {
 		    	notes.finishEditing(note);
-		    }
-		});
-	}
-
-	public void removeOnDelete(final ArrayList<Window> children) {
-		connect(new Widget.Destroy() {
-		    public void onDestroy(Widget source) {
-		    	children.remove(this);
 		    }
 		});
 	}
@@ -80,8 +69,7 @@ public class Editor extends Window {
 		return (int) note.getID();
 	}
 
-	private void updateNoteData() {//
-		changed = true;
+	private void updateNoteData() {
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
 		if(note.isUsable()) {
@@ -114,6 +102,7 @@ public class Editor extends Window {
 	private class ScrolledText extends ScrolledWindow {
 		private TextBuffer buffer;
 		private TextView view;
+
 		private ScrolledText(String content) {
 			buffer = new TextBuffer();
 			buffer.setText(content);
@@ -129,9 +118,11 @@ public class Editor extends Window {
 			setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
 			add(view);
 		}
+
 		private String getText() {
 			return buffer.getText();
 		}
+
 		private void grabTextFocus() {
 			view.grabFocus();
 		}

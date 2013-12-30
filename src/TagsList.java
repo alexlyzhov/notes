@@ -3,19 +3,20 @@ import org.gnome.gdk.EventButton;
 import java.util.ArrayList;
 
 public class TagsList {
-	private final DataColumnString nameColumn = new DataColumnString();
-	private final DataColumn[] columns = {nameColumn};
 	private TagsListModel model;
 	private TagsListTree tree;
 	private boolean trashShown;
 
 	public TagsList() { //updateTagsList inside
-		model = new TagsListModel(columns);
+		model = new TagsListModel();
 		tree = new TagsListTree(model);
 	}
 
 	private class TagsListModel extends ListStore {
-		private TagsListModel(DataColumn[] columns) {
+		private final DataColumnString nameColumn = new DataColumnString();
+		private final DataColumn[] columns = {nameColumn};
+
+		private TagsListModel() {
 			super(columns);
 		}
 
@@ -90,11 +91,11 @@ public class TagsList {
 		private TagsListTree(TagsListModel model) {
 			super(model);
 			this.model = model;
-			setHeadersVisible(false);
-			TreeViewColumn nameViewColumn = appendColumn();
-			nameViewColumn.setTitle("Tag");
-			new CellRendererText(nameViewColumn).setText(nameColumn);
-			connectToAction();
+			// setHeadersVisible(false);
+			// TreeViewColumn nameViewColumn = appendColumn();
+			// // nameViewColumn.setTitle("Tag");
+			// new CellRendererText(nameViewColumn).setText(nameColumn);
+			// connectToAction();
 		}
 
 		private void connectToAction() {

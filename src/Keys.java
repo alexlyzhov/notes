@@ -20,13 +20,27 @@ public class Keys {
 			this.mask = mask;
 			this.code = code;
 		}
+
+		public void execute() {
+			Notes notes = Notes.getInstance();
+			switch(this) {
+				case LIST_ID:
+					notes.toggleVisible();
+					break;
+				case NEW_ID:
+					notes.openNewNote();
+					break;
+				case EXIT_ID:
+					notes.exit();
+					break;
+			}
+		}
 	};
 
 	private JXGrabKey gk;
 	private HotkeyListener listener;
 
 	public Keys() {
-		final Notes notes = Notes.getInstance();
 		System.loadLibrary("JXGrabKey");
 		gk = JXGrabKey.getInstance();
 		int state = 0;
@@ -47,17 +61,7 @@ public class Keys {
 
 		listener = new HotkeyListener() {
 			public void onHotkey(int id) {
-				switch(Key.values()[id].name) {
-					case "list":
-						notes.toggleVisible();
-						break;
-					case "new":
-						notes.openNewNote();
-						break;
-					case "exit":
-						notes.exit();
-						break;
-				}
+				Key.values()[id].execute();
 			}
 		};
 		gk.addHotkeyListener(listener);

@@ -1,85 +1,29 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
-import java.util.Arrays;
 import java.util.ArrayList;
 
 public class NotesWindow extends Window {
-	private ArrayList<Window> children = new ArrayList<Window>();
+	private NotesVBox vbox;
 	final private NotesList notesList;
 	final private TagsList tagsList;
-	private ScrolledWindow notesListWindow, tagsListWindow;
-	private boolean visible;
-	private NotesVBox vbox;
+	private ArrayList<Widget> children = new ArrayList<Widget>();
+	private boolean visible = false;
 
 	public NotesWindow(NotesList notesList, TagsList tagsList) {
 		this.notesList = notesList;
 		this.tagsList = tagsList;
-		this.notesListWindow = notesList.getScrolledWindow();
-		this.tagsListWindow = tagsList.getScrolledWindow();
 		setTitle("Notes");
 		setSunIcon();
 		setLeftLocation();
-		exitOnDelete();
-		vbox = new NotesVBox(notesListWindow, tagsListWindow);
+		hideOnDelete();
+		vbox = new NotesVBox(notesList, tagsList);
 		add(vbox);
-		Boolean hideBoolean = Args.getInstance().getBooleanArgument("hide");
-		boolean hide = false;
-		if(hideBoolean == null) {
-			hide = false;
-		} else if(hideBoolean == false) {
-			hide = false;
-		} else if(hideBoolean == true) {
-			hide = true;
-		}
-		if(!hide) {
-			toggleVisible();
-		}
-	}
-
-	public void newEditor(Note note) {
-		Editor editor = new Editor(note);
-		children.add(editor);
-		editor.removeOnDelete(children);
-	}
-
-	public void closeEditor(Note note) {
-		for(Window i: children) {
-			if(i instanceof Editor) {
-				if(((Editor)i).getNoteID() == note.getID()) {
-					((Editor)i).destroy();
-				}
-			}
-		}
-	}
-
-	public void newProperties(Note note) {
-		Properties properties = new Properties(note);
-		children.add(properties);
-		properties.removeOnDelete(children); //repair this mechanism
-	}
-
-	public void destroyChildren() {
-		for(Window window: children) {
-			window.destroy();
-		}
-	}
-
-	private boolean runHidden(String args[]) {
-		if(Arrays.asList(args).contains("hide")) return true;
-		return false;
-	}
-
-	public void toggleVisible() {
-		if(visible) hide();
-		else showAll();
-		visible = !visible;
+		if(!runHidden()) toggleVisible();
 	}
 
 	private void setSunIcon() {
 		try {
-			// String dir = System.getProperty("user.dir");
-			// Pixbuf sun = new Pixbuf(dir + "/ico/sun.png");
 			Pixbuf sun = new Pixbuf("ico/sun.png");
 			setIcon(sun);
 		} catch(Exception ex) {ex.printStackTrace();}
@@ -96,13 +40,60 @@ public class NotesWindow extends Window {
 		move(x, y);
 	}
 
-	private void exitOnDelete() {
+	private void hideOnDelete() {
 		connect(new Window.DeleteEvent() {
 		    public boolean onDeleteEvent(Widget source, Event event) {
 		    	toggleVisible();
 		    	return true;
 		    }
 		});
+	}
+
+	private boolean runHidden() {
+		Boolean hideBoolean = Args.getInstance().getBooleanArgument("hide");
+		if((hideBoolean == null) || (hideBoolean == false)) return false;
+		return true;
+	}
+
+	public void toggleVisible() {
+		if(visible) hide();
+		else showAll();
+		visible = !visible;
+	}
+
+	private void addChild(Widget widget) {
+		children.add(widget);
+		widget.connect(new Widget.Destroy() {
+			public void onDestroy(Widget widget) {
+		    	children.remove(widget);
+		    }
+		});
+	}
+
+	public void destroyChildren() {
+		for(Widget widget: children) {
+			widget.destroy();
+		}
+	}
+
+	public void newEditor(Note note) {
+		Editor editor = new Editor(note);
+		addChild(editor);
+	}
+
+	public void closeEditor(Note note) {
+		for(Widget i: children) {
+			if(i instanceof Editor) {
+				if(((Editor)i).getNoteID() == note.getID()) {
+					((Editor)i).destroy();
+				}
+			}
+		}
+	}
+
+	public void newProperties(Note note) {
+		Properties properties = new Properties(note);
+		addChild(properties);
 	}
 
 	private class NewNoteButton extends Button {
@@ -112,7 +103,6 @@ public class NotesWindow extends Window {
 			Pixbuf edit = null;
 			try {
 				edit = new Pixbuf("ico/edit.png");
-				// edit = new Pixbuf(getClass().getResource("ico/edit.png").getPath());
 			} catch(Exception ex) {ex.printStackTrace();}
 			setImage(new Image(edit));
 
@@ -134,35 +124,37 @@ public class NotesWindow extends Window {
 	private class NotesVBox extends VBox {
 		private NewNoteButton button;
 		private PanedLists paned;
+		private ScrolledWindow notesListWindow, tagsListWindow;
+		private boolean tagsShown;
 
-		private NotesVBox(ScrolledWindow notesListWindow, ScrolledWindow tagsListWindow) {
+		private NotesVBox(NotesList notesList, TagsList tagsList) {
 			super(false, 0);
 			button = new NewNoteButton();
+			notesListWindow = notesList.getScrolledWindow();
+			tagsListWindow = tagsList.getScrolledWindow();
 			paned = new PanedLists(notesListWindow, tagsListWindow);
 			packStart(button, false, false, 0);
-			packEnd(paned, true, true, 0);
+			packPaned();
 			if(tagsList.noTags()) {
 				showNotesList();
 			}
 		}
 
 		private void showNotesList() {
-			Widget[] elems = getChildren();
-			if(Arrays.asList(elems).contains(paned)) {
+			if(tagsShown) {
 				remove(paned);
 				for(Widget widget: paned.getChildren()) {
 					if(widget.equals(notesListWindow)) {
 						paned.remove(notesListWindow);
 					}
 				}
-				packEnd(notesListWindow, true, true, 0);
 				showAll();
-			}
+				tagsShown = !tagsShown;
+			} else System.out.println("calling showNotesList when notesList was already added");
 		}
 
 		private void showPaned() {
-			Widget[] elems = getChildren();
-			if(Arrays.asList(elems).contains(notesListWindow)) {
+			if(!tagsShown) {
 				boolean listInPaned = false;
 				for(Widget widget: paned.getChildren()) {
 					if(widget.equals(notesListWindow)) {
@@ -173,17 +165,27 @@ public class NotesWindow extends Window {
 				if(listInPaned == false) {
 					paned.add1(notesListWindow);
 				}
-				packEnd(paned, true, true, 0);
+				tagsShown = !tagsShown;
 				showAll();
-			}
+			} else System.out.println("calling showPaned when paned was already added");
+		}
+
+		private void packPaned() {
+			packEnd(paned, true, true, 0);
+			tagsShown = true;
+		}
+
+		private void packNotesList() {
+			packEnd(notesListWindow, true, true, 0);
+			tagsShown = false;
 		}
 	}
 
-	public void showNotesList() {
-		vbox.showNotesList();
-	}
-
-	public void showPaned() {
-		vbox.showPaned();
+	public void updateLists() {
+		if(tagsList.noTags()) {
+			vbox.showNotesList();
+		} else {
+			vbox.showPaned();
+		}
 	}
 }

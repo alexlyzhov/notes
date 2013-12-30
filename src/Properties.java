@@ -1,11 +1,11 @@
 import org.gnome.gtk.*;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Iterator;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
 import org.gnome.gdk.EventKey;
 import org.gnome.gdk.Keyval;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Properties extends Dialog {
 	private Note note;
@@ -55,9 +55,10 @@ public class Properties extends Dialog {
 				if(responseType == ResponseType.CANCEL) {
 					destroy();
 				} else if(responseType == ResponseType.OK) {
-					if(tagsChanged()) {
-						saveAndUpdate();
-					}
+					// if(tagsChanged()) {
+					// 	saveAndUpdate();
+					// }
+					saveAndUpdate();
 					destroy();
 				}
 			}
@@ -67,8 +68,17 @@ public class Properties extends Dialog {
 		present();
 	}
 
-	private boolean tagsChanged() {
-		return !note.getTags().equals(tagsOutput(tagsEntry.getText()));
+	private void setNameTitle() {
+		String name = note.getName();
+		if(name.equals("")) name = "Nameless";
+		setTitle(name);
+	}
+
+	private void setPropertiesIcon() {
+		try {
+			Pixbuf propertiesIcon = new Pixbuf("ico/properties.png");
+			setIcon(propertiesIcon);
+		} catch(Exception ex) {ex.printStackTrace();}
 	}
 
 	private void destroyOnDelete() {
@@ -88,34 +98,17 @@ public class Properties extends Dialog {
 		});
 	}
 
-	public void removeOnDelete(final ArrayList<Window> children) {
-		connect(new Widget.Destroy() {
-		    public void onDestroy(Widget source) {
-		    	children.remove(this);
-		    }
-		});
-	}
-
-	private void setNameTitle() {
-		String name = note.getName();
-		if(name.equals("")) name = "Nameless";
-		setTitle(name);
-	}
-
-	private void setPropertiesIcon() {
-		try {
-			Pixbuf properties = new Pixbuf("ico/properties.png");
-			setIcon(properties);
-		} catch(Exception ex) {ex.printStackTrace();}
-	}
-
-	private void save() {
-		saveTags();
-	}
+	// private boolean tagsChanged() {
+	// 	return !note.getTags().equals(tagsOutput(tagsEntry.getText()));
+	// }
 
 	private void saveAndUpdate() {
 		save();
 		notes.updateInfo();
+	}
+
+	private void save() {
+		saveTags();
 	}
 
 	private void removeNote() {
@@ -134,8 +127,7 @@ public class Properties extends Dialog {
 		return tags;
 	}
 
-	private void saveTags() {
-		String tags = tagsEntry.getText();
+	private String tagsToDB(String tags) {
 		ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
 		Iterator<String> iter = pieces.iterator();
 		tags = "";
@@ -149,6 +141,11 @@ public class Properties extends Dialog {
 				tags = tags += piece;
 			}	
 		}
+		return tags;
+	}
+
+	private void saveTags() {
+		String tags = tagsToDB(tagsEntry.getText());
 		note.setTags(tags);
 		notes.updateNoteTags(note);
 	}

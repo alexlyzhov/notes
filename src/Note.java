@@ -2,28 +2,23 @@ public class Note {
 	private String name = "";
 	private String content = "";
 	private String tags = "";
-	private long id; private String time;
+	private String time = null;
+	private long id;
 
 	private boolean usable;
 	private boolean editing;
 
 	public Note(String name, String content, String tags, long id, String time) {
-		this(name, content, tags);
+		this(tags);
+		this.name = name;
+		this.content = content;
 		setTime(time);
 		initiate(id);
 	}
 
-	public Note(String name, String content, String tags) {
-		this(tags);
-		this.name = name;
-		this.content = content;
-	}
-
 	public Note(String tags) {
-		if(tags != null) this.tags = tags;
+		if(tags != null) setTags(tags);
 	}
-
-	public Note() {}
 
 	public void initiate(long id) {
 		this.id = id;
@@ -36,12 +31,6 @@ public class Note {
 
 	public void setTime(String time) {
 		this.time = time;
-	}
-
-	public void updateTime(String newTime) {
-		if(usable) {
-			this.time = newTime;
-		} else System.out.println("Error: time was not updated");
 	}
 
 	public String getName() {

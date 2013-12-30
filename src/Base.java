@@ -84,7 +84,7 @@ public class Base {
 	    		try {
 	    			st = con.prepare("SELECT datetime('now')");
 	    			st.step();
-	    			note.updateTime(st.columnString(0));
+	    			note.setTime(st.columnString(0));
 	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ? WHERE id = ?");
 	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getID());
 	    			st.step();

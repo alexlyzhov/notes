@@ -1,28 +1,28 @@
 public class Note {
-	private String name, content, tags;
+	private String name = "";
+	private String content = "";
+	private String tags = "";
 	private long id; private String time;
 
 	private boolean usable;
 	private boolean editing;
 
-	public Note(String name, String content, String tags, long id, String time) { //Notes objects DB serialization
+	public Note(String name, String content, String tags, long id, String time) {
 		this(name, content, tags);
 		initiate(id, time);
 	}
 
 	public Note(String name, String content, String tags) {
+		this(tags);
 		this.name = name;
 		this.content = content;
-		this.tags = tags;
 	}
 
 	public Note(String tags) {
-		this("", "", tags);
+		if(tags != null) this.tags = tags;
 	}
 
-	public Note() {
-		this("", "", "");
-	}
+	public Note() {}
 
 	public void initiate(long id, String time) {
 		this.id = id;

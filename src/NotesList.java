@@ -93,15 +93,15 @@ public class NotesList {
 						MouseButton b = event.getButton();
 						if(b == MouseButton.LEFT) {
 							if(!note.isEditing()) {
-								Notes.getInstance().getWindow().newEditor(note);
+								Notes.getInstance().openNote(note);
 							} else {
-								Notes.getInstance().getWindow().closeEditor(note);
+								Notes.getInstance().closeNote(note);
 							}
 						} else if(!note.isEditing()) {
 							if(b == MouseButton.MIDDLE) {
 								Notes.getInstance().removeNote(note);
 							} else if(b == MouseButton.RIGHT) {
-								Notes.getInstance().getWindow().newProperties(note);
+								Notes.getInstance().invokeProperties(note);
 							}
 						}
 					}
@@ -127,7 +127,7 @@ public class NotesList {
 		return new NotesListScrolled(tree);
 	}
 
-	private boolean noteInTag(Note note, String tag) {
+	private boolean noteInTag(Note note, String tag) { //move to TagsList class
 		String[] noteTags = note.getTags().split(",");
 		if(tag == null) {
 			for(String noteTag: noteTags) {
@@ -151,7 +151,7 @@ public class NotesList {
 		return false;
 	}
 
-	public void update(ArrayList<Note> notesData, TagsList tagsList) {
+	public void update(ArrayList<Note> notesData, TagsList tagsList) { //move to TagsList class
 		if(!tagsList.nothingSelected()) {
 			String tag = tagsList.getSelectedTag();
 			model.clear();

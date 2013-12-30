@@ -25,27 +25,17 @@ public class Keys {
 	private JXGrabKey gk;
 	private HotkeyListener listener;
 
-	public Keys(String[] args) {
+	public Keys() {
 		final Notes notes = Notes.getInstance();
-		final NotesWindow notesWindow = notes.getWindow();
 		System.loadLibrary("JXGrabKey");
 		gk = JXGrabKey.getInstance();
 		int state = 0;
 		Key c = null;
-		for(String i: args) {
-			if(state == 0) {
-				for(Key key: Key.values()) {
-					if(i.equals(key.name)) {
-						state = 1;
-						c = key;
-					}
-				}
-			} else if(state == 1) {
-				c.mask = Integer.parseInt(i);
-				state = 2;
-			} else if(state == 2) {
-				c.code = Integer.parseInt(i);
-				state = 0;
+		for(Key key: Key.values()) {
+			String reply = Args.getInstance().getNamedArgument(key.name);
+			if(reply != null) {
+				key.mask = Integer.parseInt(reply.substring(0, reply.indexOf(":")));
+				key.code = Integer.parseInt(reply.substring(reply.indexOf(":") + 1, reply.length()));
 			}
 		}
 
@@ -59,10 +49,10 @@ public class Keys {
 			public void onHotkey(int id) {
 				switch(Key.values()[id].name) {
 					case "list":
-						notesWindow.toggleVisible();
+						notes.getWindow().toggleVisible();
 						break;
 					case "new":
-						notes.createNote();
+						notes.openNewNote();
 						break;
 					case "exit":
 						notes.exit();

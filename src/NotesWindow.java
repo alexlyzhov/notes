@@ -12,7 +12,7 @@ public class NotesWindow extends Window {
 	private boolean visible;
 	private NotesVBox vbox;
 
-	public NotesWindow(String[] args, NotesList notesList, TagsList tagsList) {
+	public NotesWindow(NotesList notesList, TagsList tagsList) {
 		this.notesList = notesList;
 		this.tagsList = tagsList;
 		this.notesListWindow = notesList.getScrolledWindow();
@@ -23,7 +23,16 @@ public class NotesWindow extends Window {
 		exitOnDelete();
 		vbox = new NotesVBox(notesListWindow, tagsListWindow);
 		add(vbox);
-		if(!runHidden(args)) {
+		Boolean hideBoolean = Args.getInstance().getBooleanArgument("hide");
+		boolean hide = false;
+		if(hideBoolean == null) {
+			hide = false;
+		} else if(hideBoolean == false) {
+			hide = false;
+		} else if(hideBoolean == true) {
+			hide = true;
+		}
+		if(!hide) {
 			toggleVisible();
 		}
 	}
@@ -32,7 +41,6 @@ public class NotesWindow extends Window {
 		Editor editor = new Editor(note);
 		children.add(editor);
 		editor.removeOnDelete(children);
-		Notes.getInstance().startEditing(note);
 	}
 
 	public void closeEditor(Note note) {
@@ -48,7 +56,7 @@ public class NotesWindow extends Window {
 	public void newProperties(Note note) {
 		Properties properties = new Properties(note);
 		children.add(properties);
-		properties.removeOnDelete(children);
+		properties.removeOnDelete(children); //repair this mechanism
 	}
 
 	public void destroyChildren() {
@@ -110,7 +118,7 @@ public class NotesWindow extends Window {
 
 			connect(new Button.Clicked() {
 				public void onClicked(Button button) {
-					Notes.getInstance().createNote();
+					Notes.getInstance().openNewNote();
 				}
 			});
 		}

@@ -1,38 +1,37 @@
 import org.gnome.gtk.Gtk;
 import java.util.ArrayList;
- 
+
 public class Notes {
 	private static Notes notes;
-	private String[] args;
+	private NotesWindow window;
 	private Base base;
 	private Keys keys;
-	private NotesWindow window;
-	private ArrayList<Note> notesData;
 	private NotesList notesList;
 	private TagsList tagsList;
 
+	private ArrayList<Note> notesData;
+
 	public static void main(String[] args) {
-		notes = new Notes(args);
+		Gtk.init(args);
+		Args.init(args);
+		notes = new Notes();
 		notes.init();
 	}
+
+	private Notes() {}
 
 	public static Notes getInstance() {
 		return notes;
 	}
 
-	private Notes(String[] args) {
-		this.args = args;
-	}
-
 	private void init() {
-		base = new Base(args);
-		Gtk.init(args);
+		base = new Base();
 		notesData = base.getNotes();
 		notesList = new NotesList();
 		tagsList = new TagsList();
 		updateTagsList();
-		window = new NotesWindow(args, notesList, tagsList);
-		keys = new Keys(args);
+		window = new NotesWindow(notesList, tagsList);
+		keys = new Keys();
 		Gtk.main();
 	}
 
@@ -43,21 +42,29 @@ public class Notes {
 		keys.cleanUp();
 	}
 
-	public void createNote() {
-		Note note = newNote();
-		addNote(note);
-		window.newEditor(note);
-	}
-
 	private Note newNote() {
-		String tag = tagsList.getSelectedTag();
-		return tag == null ? new Note() : new Note(tag);
+		Note note = new Note(tagsList.getSelectedTag());
+		addNote(note);
+		return note;
 	}
 
 	private void addNote(Note note) {
 		base.newNote(note);
 		notesData.add(note);
 		updateNotesList();
+	}
+
+	public void openNote(Note note) {
+		window.newEditor(note);
+		startEditing(note);
+	}
+
+	public void openNewNote() {
+		openNote(newNote());
+	}
+
+	public void closeNote(Note note) {
+		window.closeEditor(note);
 	}
 
 	public void removeNote(Note note) {
@@ -120,6 +127,10 @@ public class Notes {
     	} else {
     		notesList.updateView(note);
     	}
+	}
+
+	public void invokeProperties(Note note) {
+		window.newProperties(note);
 	}
 
 	public NotesWindow getWindow() {

@@ -9,7 +9,7 @@ public class TagsList {
 	private TagsListTree tree;
 	private boolean trashShown;
 
-	public TagsList() {
+	public TagsList() { //updateTagsList inside
 		model = new TagsListModel(columns);
 		tree = new TagsListTree(model);
 	}

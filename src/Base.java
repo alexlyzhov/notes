@@ -1,32 +1,27 @@
 import com.almworks.sqlite4java.*;
 import java.util.ArrayList;
 import java.net.URLDecoder;
+
+// split some functionality to modules: tags, trash, hotkeys
 public class Base {
 	private SQLiteQueue queue;
 
-	public Base(String[] args) {
+	public Base() {
 		java.util.logging.Logger.getLogger("com.almworks.sqlite4java").setLevel(java.util.logging.Level.OFF);
-		initQueue(args);
+		initQueue(); //
 		createTable();
 	}
 
-	private void initQueue(String[] args) {
+	private void initQueue() {
 		String absPath = "";
 		// try {
 		// 	absPath = URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
 		// } catch(Exception ex) {ex.printStackTrace();}
-		boolean openNext = false;
-		for(String i: args) {
-			if(openNext) {
-				queue = new SQLiteQueue(new java.io.File(absPath + i));
-				break;
-			}
-			if(i.startsWith("db")) {
-				openNext = true;
-			}
-		}
+		String filePath = "notes.db";
+		String tmpFilePath = Args.getInstance().getNamedArgument("db");
+		if(tmpFilePath != null) filePath = tmpFilePath;
 		if(queue == null) {
-			queue = new SQLiteQueue(new java.io.File(absPath + "notes.db"));
+			queue = new SQLiteQueue(new java.io.File(absPath + filePath));
 		}
 		queue.start();
 	}
@@ -93,7 +88,7 @@ public class Base {
 		});
 	}
 
-	public void updateNoteTags(final Note note) {
+	public void updateNoteTags(final Note note) { //merge with updateNote
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;

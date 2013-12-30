@@ -80,7 +80,7 @@ public class Editor extends Window {
 		return (int) note.getID();
 	}
 
-	private void updateNoteData() {
+	private void updateNoteData() {//
 		changed = true;
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());

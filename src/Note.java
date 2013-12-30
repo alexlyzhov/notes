@@ -9,7 +9,8 @@ public class Note {
 
 	public Note(String name, String content, String tags, long id, String time) {
 		this(name, content, tags);
-		initiate(id, time);
+		setTime(time);
+		initiate(id);
 	}
 
 	public Note(String name, String content, String tags) {
@@ -24,10 +25,17 @@ public class Note {
 
 	public Note() {}
 
-	public void initiate(long id, String time) {
+	public void initiate(long id) {
 		this.id = id;
-		this.time = time;
 		usable = true;
+	}
+
+	public boolean isUsable() {
+		return usable;
+	}
+
+	public void setTime(String time) {
+		this.time = time;
 	}
 
 	public void updateTime(String newTime) {
@@ -67,12 +75,7 @@ public class Note {
 	}
 
 	public String getTime() {
-		if(usable) {
-			return time;
-		} else {
-			System.out.println("Time was not set");
-			return "";
-		}
+		return time;
 	}
 
 	public String getTags() {

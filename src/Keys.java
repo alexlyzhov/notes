@@ -49,7 +49,7 @@ public class Keys {
 			public void onHotkey(int id) {
 				switch(Key.values()[id].name) {
 					case "list":
-						notes.getWindow().toggleVisible();
+						notes.toggleVisible();
 						break;
 					case "new":
 						notes.openNewNote();

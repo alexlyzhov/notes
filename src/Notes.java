@@ -49,7 +49,7 @@ public class Notes {
 	}
 
 	private void addNote(Note note) {
-		base.newNote(note);
+		base.newNote(note, notesList);
 		notesData.add(note);
 		updateNotesList();
 	}
@@ -109,6 +109,7 @@ public class Notes {
 
 	public void updateNote(Note note) {
 		base.updateNote(note, notesList);
+		updateInfo();
 	}
 
 	public void updateNoteTags(Note note) {
@@ -133,7 +134,7 @@ public class Notes {
 		window.newProperties(note);
 	}
 
-	public NotesWindow getWindow() {
-		return window;
+	public void toggleVisible() {
+		window.toggleVisible();
 	}
 }

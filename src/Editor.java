@@ -84,8 +84,10 @@ public class Editor extends Window {
 		changed = true;
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
-		notes.updateNote(note);
-		notes.updateNotesList();
+		if(note.isUsable()) {
+			notes.updateNote(note);
+			notes.updateNotesList(); //notesList.updateView()
+		}
 	}
 
 	private class NameEntry extends Entry {

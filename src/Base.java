@@ -1,21 +1,19 @@
 import com.almworks.sqlite4java.*;
 import java.util.ArrayList;
-import java.net.URLDecoder;
 
-// split some functionality to modules: tags, trash, hotkeys
 public class Base {
 	private SQLiteQueue queue;
 
 	public Base() {
 		java.util.logging.Logger.getLogger("com.almworks.sqlite4java").setLevel(java.util.logging.Level.OFF);
-		initQueue(); //
+		initQueue();
 		createTable();
 	}
 
 	private void initQueue() {
 		String absPath = "";
 		// try {
-		// 	absPath = URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
+		// 	absPath = java.net.URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
 		// } catch(Exception ex) {ex.printStackTrace();}
 		String filePath = "notes.db";
 		String tmpFilePath = Args.getInstance().getNamedArgument("db");
@@ -48,23 +46,35 @@ public class Base {
 		}).complete();
 	}
 
-	public void newNote(final Note note) {
+	public void newNote(final Note note, final NotesList notesList) {
+		queue.execute(new SQLiteJob<Object>() {
+			protected Object job(SQLiteConnection con) {
+				SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("SELECT datetime('now')");
+	    			st.step();
+	    			note.setTime(st.columnString(0));
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
+			}
+		}).complete();
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("SELECT datetime('now')");
-	    			st.step();
-	    			String newDateTime = st.columnString(0);
 	    			st = con.prepare("INSERT INTO Notes (name, content, time, tags) VALUES (?, ?, ?, ?)");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, newDateTime); st.bind(4, note.getTags());
+	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getTags());
 	    			st.step();
-	    			note.initiate(con.getLastInsertId(), newDateTime);
+	    			note.initiate(con.getLastInsertId());
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;
 		    }
-		}).complete();
+		    protected void jobFinished(Object nullObject) {
+		    	updateNote(note, notesList);
+		    }
+		});
 	}
 
 	public void updateNote(final Note note, final NotesList notesList) {
@@ -88,7 +98,7 @@ public class Base {
 		});
 	}
 
-	public void updateNoteTags(final Note note) { //merge with updateNote
+	public void updateNoteTags(final Note note) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
@@ -135,22 +145,6 @@ public class Base {
 			    finally {if(st != null) st.dispose();}
 			    return result;
 			}
-		}).complete();
-	}
-
-	public int getCount() {
-		return queue.execute(new SQLiteJob<Integer>() {
-		    protected Integer job(SQLiteConnection con) {
-		    	int result = -1;
-		        SQLiteStatement st = null;
-		        try {
-		        	st = con.prepare("SELECT Count(*) FROM Notes");
-		        	st.step();
-	        		result = st.columnInt(0);
-		        } catch(SQLiteException ex) {ex.printStackTrace();}
-		        finally {if(st != null) st.dispose();}
-		        return result;
-		    }
 		}).complete();
 	}
 }

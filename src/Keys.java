@@ -48,16 +48,21 @@ public class Keys {
 		for(Key key: Key.values()) {
 			String reply = Args.getInstance().getNamedArgument(key.name);
 			if(reply != null) {
-				key.mask = Integer.parseInt(reply.substring(0, reply.indexOf(":")));
-				key.code = Integer.parseInt(reply.substring(reply.indexOf(":") + 1, reply.length()));
+				int newmask, newcode;
+				try {
+					newmask = Integer.parseInt(reply.substring(0, reply.indexOf(":")));
+					newcode = Integer.parseInt(reply.substring(reply.indexOf(":") + 1, reply.length()));
+					key.mask = newmask;
+					key.code = newcode;
+				} catch(NumberFormatException ex) {ex.printStackTrace();}
 			}
 		}
 
-		try {
-			for(int i = 0; i < Key.values().length; i++) {
+		for(int i = 0; i < Key.values().length; i++) {
+			try {
 				gk.registerX11Hotkey(i, Key.values()[i].mask, Key.values()[i].code);
-			}
-		} catch(HotkeyConflictException ex) {ex.printStackTrace();}
+			} catch(HotkeyConflictException ex) {ex.printStackTrace();}
+		}
 
 		listener = new HotkeyListener() {
 			public void onHotkey(int id) {

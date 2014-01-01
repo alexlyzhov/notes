@@ -28,8 +28,12 @@ public class Args {
 
 	public Boolean getBooleanArgument(String tag) {
 		String namedArgument = getNamedArgument(tag);
-		if(namedArgument == null) return null;
-		if(namedArgument.equals("true")) return true;
+		if(namedArgument == null) {
+			return null;
+		}
+		if(namedArgument.equals("true")) {
+			return true;
+		}
 		return false;
 	}
 }

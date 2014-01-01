@@ -97,6 +97,10 @@ public class Notes {
 		notesList.update(notesData, tagsList);
 	}
 
+	public void updateNoteView(Note note) {
+		notesList.updateView(note);
+	}
+
 	public void updateInfo() {
 		updateTagsList();
 		updateNotesList();

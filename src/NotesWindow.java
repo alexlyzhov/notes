@@ -148,8 +148,8 @@ public class NotesWindow extends Window {
 						paned.remove(scrolledNotesList);
 					}
 				}
+				packNotesList();
 				showAll();
-				tagsShown = !tagsShown;
 			}
 		}
 
@@ -165,7 +165,7 @@ public class NotesWindow extends Window {
 				if(listInPaned == false) {
 					paned.add1(scrolledNotesList);
 				}
-				tagsShown = !tagsShown;
+				packPaned();
 				showAll();
 			}
 		}

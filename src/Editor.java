@@ -1,6 +1,7 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Keyval;
 import org.gnome.gdk.EventKey;
+import org.gnome.sourceview.*;
 
 public class Editor extends Window {
 	private Widgets widgets;
@@ -52,19 +53,19 @@ public class Editor extends Window {
 	}
 
 	private class ScrolledText extends ScrolledWindow {
-		private TextBuffer buffer;
-		private TextView view;
+		private SourceBuffer buffer;
+		private SourceView view;
 
 		private ScrolledText(String content) {
-			buffer = new TextBuffer();
+			buffer = new SourceBuffer();
 			buffer.setText(content);
-			buffer.connect(new TextBuffer.Changed() {
+			buffer.connect(new SourceBuffer.Changed() {
 				public void onChanged(TextBuffer buffer) {
 					updateNoteData();
 				}
 			});
 
-			view = new TextView(buffer);
+			view = new SourceView(buffer);
 			view.setWrapMode(WrapMode.WORD);
 
 			setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
@@ -105,6 +106,7 @@ public class Editor extends Window {
 		if(note.isUsable()) {
 			notes.updateNote(note);
 		}
-		notes.updateNotesList(); //notesList.updateView()
+		// notes.updateNotesList(); //notesList.updateView()
+		notes.updateNoteView(note);
 	}
 }

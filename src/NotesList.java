@@ -4,21 +4,21 @@ import org.gnome.gdk.MouseButton;
 import java.util.ArrayList;
 
 public class NotesList {
+	private final DataColumnString nameColumn = new DataColumnString();
+	private final DataColumnString timeColumn = new DataColumnString();
+	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
+	private final DataColumn[] columns = new DataColumn[] {nameColumn, timeColumn, noteColumn};
 	private NotesListModel model;
 	private NotesListTree tree;
 
 	public NotesList() {
-		model = new NotesListModel();
+		model = new NotesListModel(columns);
 		tree = new NotesListTree(model);
 	}
 
-	private class NotesListModel extends ListStore {
-		private final DataColumnString nameColumn = new DataColumnString();
-		private final DataColumnString timeColumn = new DataColumnString();
-		private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
-		private final DataColumn[] columns = new DataColumn[] {nameColumn, timeColumn, noteColumn};
+	private class NotesListModel extends ListModel {
 
-		private NotesListModel() {
+		private NotesListModel(DataColumn[] columns) {
 			super(columns);
 			setSortColumn(timeColumn, SortType.DESCENDING);
 		}
@@ -75,11 +75,6 @@ public class NotesList {
 	private class NotesListTree extends ListTree {
 		private NotesListTree(NotesListModel model) {
 			super(model);
-			// setHeadersVisible(false);
-			// TreeViewColumn nameViewColumn = appendColumn();
-			// // nameViewColumn.setTitle("Name");
-			// new CellRendererText(nameViewColumn).setMarkup(nameColumn);
-			// connectToAction();
 		}
 
 		protected void connectToAction() {
@@ -91,17 +86,18 @@ public class NotesList {
 						TreeIter row = model.getIter(path);
 						Note note = model.getNote(row);
 						MouseButton b = event.getButton();
+						Notes notes = Notes.getInstance();
 						if(b == MouseButton.LEFT) {
 							if(!note.isEditing()) {
-								Notes.getInstance().openNote(note);
+								notes.openNote(note);
 							} else {
-								Notes.getInstance().closeNote(note);
+								notes.closeNote(note);
 							}
 						} else if(!note.isEditing()) {
 							if(b == MouseButton.MIDDLE) {
-								Notes.getInstance().removeNote(note);
+								notes.removeNote(note);
 							} else if(b == MouseButton.RIGHT) {
-								Notes.getInstance().invokeProperties(note);
+								notes.invokeProperties(note);
 							}
 						}
 					}
@@ -111,23 +107,11 @@ public class NotesList {
 		}
 	}
 
-	private class NotesListScrolled extends ScrolledWindow {
-		private NotesListScrolled(NotesListTree tree) {
-			setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
-			getVAdjustment().connect(new Adjustment.Changed() {
-				public void onChanged(Adjustment source) {
-					source.setValue(0);
-				}
-			});
-			add(tree);
-		} 
+	public ListTree getTree() {
+		return tree;
 	}
 
-	public ScrolledWindow getScrolledWindow() {
-		return new NotesListScrolled(tree);
-	}
-
-	private boolean noteInTag(Note note, String tag) { //move to TagsList class
+	private boolean noteInTag(Note note, String tag) {
 		String[] noteTags = note.getTags().split(",");
 		if(tag == null) {
 			for(String noteTag: noteTags) {
@@ -151,7 +135,7 @@ public class NotesList {
 		return false;
 	}
 
-	public void update(ArrayList<Note> notesData, TagsList tagsList) { //move to TagsList class
+	public void update(ArrayList<Note> notesData, TagsList tagsList) {
 		if(!tagsList.nothingSelected()) {
 			String tag = tagsList.getSelectedTag();
 			model.clear();

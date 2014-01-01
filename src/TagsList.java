@@ -3,25 +3,27 @@ import org.gnome.gdk.EventButton;
 import java.util.ArrayList;
 
 public class TagsList {
+	private final DataColumnString nameColumn = new DataColumnString();
+	private final DataColumn[] columns = {nameColumn};
 	private TagsListModel model;
 	private TagsListTree tree;
+	private TreeSelection selection;
+
 	private boolean trashShown;
 
-	public TagsList() { //updateTagsList inside
-		model = new TagsListModel();
+	public TagsList() {
+		model = new TagsListModel(columns);
 		tree = new TagsListTree(model);
+		selection = tree.getSelection();
 	}
 
-	private class TagsListModel extends ListStore {
-		private final DataColumnString nameColumn = new DataColumnString();
-		private final DataColumn[] columns = {nameColumn};
-
-		private TagsListModel() {
+	private class TagsListModel extends ListModel {
+		private TagsListModel(DataColumn[] columns) {
 			super(columns);
 		}
 
 		private TreeIter getAllRow() {
-			return model.getIterFirst();
+			return getIterFirst();
 		}
 
 		private void addNoteTags(Note note) {
@@ -86,19 +88,15 @@ public class TagsList {
 		}
 	}
 
-	private class TagsListTree extends TreeView { //pick selection subclass out
+	private class TagsListTree extends ListTree {
 		private TagsListModel model;
+
 		private TagsListTree(TagsListModel model) {
 			super(model);
 			this.model = model;
-			// setHeadersVisible(false);
-			// TreeViewColumn nameViewColumn = appendColumn();
-			// // nameViewColumn.setTitle("Tag");
-			// new CellRendererText(nameViewColumn).setText(nameColumn);
-			// connectToAction();
 		}
 
-		private void connectToAction() {
+		protected void connectToAction() {
 			getSelection().connect(new TreeSelection.Changed() {
 				public void onChanged(TreeSelection selection) {
 					if(!nothingSelected()) {
@@ -107,113 +105,85 @@ public class TagsList {
 				}
 			});
 		}
-
-		public String getSelectedTag() {
-			if(nothingSelected()) {
-				System.out.println("Error: call getSelectedTag() when nothing selected");
-				return null;
-			}
-			if(allRowSelected()) return null;
-			TreePath[] paths = getSelection().getSelectedRows();
-			return model.getTag(getModel().getIter(paths[0]));
-		}
-
-		public boolean nothingSelected() {
-			TreePath[] paths = getSelection().getSelectedRows();
-			if(paths.length == 0) {
-				return true;
-			}
-			return false;
-		}
-
-		private boolean allRowSelected() {
-			TreePath[] paths = getSelection().getSelectedRows();
-			if(nothingSelected()) return false;
-			if(paths[0].getIndices()[0] == 0) return true;
-			return false;
-		}
-
-		public boolean lastSelected() {
-			TreeIter selected = tree.getSelection().getSelected();
-			if(selected == null) return false; //logically?
-			return tree.getSelection().getSelected().iterNext() == false;
-		}
-
-		public void selectAllRow() {
-			selectRow(model.getAllRow());
-		}
-
-		public void selectRow(TreeIter row) {
-			getSelection().selectRow(row);
-		}
-
-		private boolean trashTagExists(ArrayList<Note> notesData) {
-			for(Note note: notesData) {
-				for(String tag: note.getTags().split(",")) {
-					if(tag.equals("Trash")) {
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		private void update(ArrayList<Note> notesData) {
-			String selected = null;
-			if(!nothingSelected()) {
-				selected = getSelectedTag();
-			}
-			model.clear();
-			for(Note note: notesData) {
-				model.addNoteTags(note);
-			}
-			if(trashTagExists(notesData)) {
-				model.addTrash();
-			}
-			TreeIter selectedRow = model.getRow(selected);
-			if(selectedRow != null) {
-				selectRow(selectedRow);
-			} else {
-				selectAllRow();
-			}
-		}
 	}
 
-	private class NotesListScrolled extends ScrolledWindow {
-		private NotesListScrolled(TagsListTree tree) {
-			setPolicy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
-			getVAdjustment().connect(new Adjustment.Changed() {
-				public void onChanged(Adjustment source) {
-					source.setValue(0);
-				}
-			});
-			add(tree);
-		} 
-	}
-
-	public ScrolledWindow getScrolledWindow() {
-		return new NotesListScrolled(tree);
+	public ListTree getTree() {
+		return tree;
 	}
 
 	public void update(ArrayList<Note> notesData) {
-		tree.update(notesData);
+		String selected = null;
+		if(!nothingSelected()) {
+			selected = getSelectedTag();
+		}
+		model.clear();
+		for(Note note: notesData) {
+			model.addNoteTags(note);
+		}
+		if(trashTagExists(notesData)) {
+			model.addTrash();
+		}
+		TreeIter selectedRow = model.getRow(selected);
+		if(selectedRow != null) {
+			selectRow(selectedRow);
+		} else {
+			selectAllRow();
+		}
 	}
 
-	public boolean trashSelected() {
-		if(trashShown && tree.lastSelected()) return true;
+	private boolean trashTagExists(ArrayList<Note> notesData) {
+		for(Note note: notesData) {
+			for(String tag: note.getTags().split(",")) {
+				if(tag.equals("Trash")) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 
-	public void selectAllRow() {
-		tree.selectAllRow();
-	}
-
 	public String getSelectedTag() {
-		return tree.getSelectedTag();
+		if(nothingSelected()) {
+			System.out.println("Error: call getSelectedTag() when nothing selected");
+			return null;
+		}
+		if(allRowSelected()) return null;
+		TreePath[] paths = selection.getSelectedRows();
+		return model.getTag(model.getIter(paths[0]));
 	}
 
 	public boolean nothingSelected() {
-		return tree.nothingSelected();
+		TreePath[] paths = selection.getSelectedRows();
+		if(paths.length == 0) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean allRowSelected() {
+		TreePath[] paths = selection.getSelectedRows();
+		if(nothingSelected()) return false;
+		if(paths[0].getIndices()[0] == 0) return true;
+		return false;
+	}
+
+	public boolean lastSelected() {
+		TreeIter selected = selection.getSelected();
+		if(selected == null) return false;
+		return selection.getSelected().iterNext() == false;
+	}
+
+	public void selectAllRow() {
+		selectRow(model.getAllRow());
+	}
+
+	public void selectRow(TreeIter row) {
+		selection.selectRow(row);
+	}
+
+	public boolean trashSelected() {
+		if(trashShown && lastSelected()) return true;
+		return false;
 	}
 
 	public boolean noTags() {

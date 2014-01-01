@@ -1,27 +1,27 @@
 import org.gnome.gtk.*;
-import org.gnome.gdk.Pixbuf;
-import org.gnome.gdk.Event;
 import org.gnome.gdk.Keyval;
 import org.gnome.gdk.EventKey;
 
 public class Editor extends Window {
+	private Widgets widgets;
 	private Note note;
-	private Notes notes;
+	private final Notes notes = Notes.getInstance();
 
 	private NameEntry nameEntry;
 	private ScrolledText text;
 	private EditorVBox vbox;
 
-	public Editor(Note noteParam) {
-		note = noteParam;
-		notes = Notes.getInstance();
-		notes.startEditing(note);
+	public Editor(Note note) {
+		widgets = new Widgets(this);
+		this.note = note;
 
-		setNameTitle();
-		setEditIcon();
-		setCenterLocation();
-		destroyOnDelete();
-		closeOnDelete();
+		widgets.setIcon("edit.png");
+		widgets.setCenterLocation();
+		widgets.destroyOnDelete();
+
+		updateNameTitle();
+		notes.startEditing(note);
+		widgets.closeOnDelete(note);
 
 		nameEntry = new NameEntry(note.getName());
 		text = new ScrolledText(note.getContent());
@@ -30,61 +30,13 @@ public class Editor extends Window {
 		showAll();
 	}
 
-	private void setNameTitle() {
-		String name = note.getName();
-		if(name.equals("")) name = "Nameless";
-		setTitle(name);
-	}
-
-	private void setEditIcon() {
-		try {
-			Pixbuf edit = new Pixbuf("ico/edit.png");
-			setIcon(edit);
-		} catch(Exception ex) {ex.printStackTrace();}
-	}
-
-	private void setCenterLocation() {
-		setDefaultSize(getScreen().getWidth() / 2, getScreen().getHeight() / 2);
-		move(getScreen().getWidth() / 8 * 3, getScreen().getHeight() / 4);
-	}
-
-	private void destroyOnDelete() {
-		connect(new Window.DeleteEvent() {
-			public boolean onDeleteEvent(Widget source, Event event) {
-				source.destroy();
-				return false;
-			}
-		});
-	}
-
-	private void closeOnDelete() {
-		connect(new Widget.Destroy() {
-		    public void onDestroy(Widget source) {
-		    	notes.finishEditing(note);
-		    }
-		});
-	}
-
-	public int getNoteID() {
-		return (int) note.getID();
-	}
-
-	private void updateNoteData() {
-		note.setName(nameEntry.getText());
-		note.setContent(text.getText());
-		if(note.isUsable()) {
-			notes.updateNote(note);
-			notes.updateNotesList(); //notesList.updateView()
-		}
-	}
-
 	private class NameEntry extends Entry {
 		private NameEntry(String name) {
 			super(name);
 			connect(new Entry.Changed() {
 				public void onChanged(Entry entry) {
 					updateNoteData();
-					setNameTitle();
+					updateNameTitle();
 				}
 			});
 			connect(new Widget.KeyPressEvent() {
@@ -137,5 +89,22 @@ public class Editor extends Window {
 				text.grabTextFocus();
 			}
 		}
+	}
+
+	private void updateNameTitle() {
+		widgets.setNameTitle(note);
+	}
+
+	public int getNoteID() {
+		return (int) note.getID();
+	}
+
+	private void updateNoteData() {
+		note.setName(nameEntry.getText());
+		note.setContent(text.getText());
+		if(note.isUsable()) {
+			notes.updateNote(note);
+		}
+		notes.updateNotesList(); //notesList.updateView()
 	}
 }

@@ -115,8 +115,8 @@ public class NotesWindow extends Window {
 	}
 
 	private class PanedLists extends HPaned {
-		private PanedLists(ScrolledWindow notesListWindow, ScrolledWindow tagsListWindow) {
-			super(notesListWindow, tagsListWindow);
+		private PanedLists(ScrolledList scrolledNotesList, ScrolledList scrolledTagsList) {
+			super(scrolledNotesList, scrolledTagsList);
 			setPosition(getWidth() * 2 / 3);
 		}
 	}
@@ -124,15 +124,15 @@ public class NotesWindow extends Window {
 	private class NotesVBox extends VBox {
 		private NewNoteButton button;
 		private PanedLists paned;
-		private ScrolledWindow notesListWindow, tagsListWindow;
+		private ScrolledList scrolledNotesList, scrolledTagsList;
 		private boolean tagsShown;
 
 		private NotesVBox(NotesList notesList, TagsList tagsList) {
 			super(false, 0);
 			button = new NewNoteButton();
-			notesListWindow = notesList.getScrolledWindow();
-			tagsListWindow = tagsList.getScrolledWindow();
-			paned = new PanedLists(notesListWindow, tagsListWindow);
+			scrolledNotesList = notesList.getTree().getScrolledList();
+			scrolledTagsList = tagsList.getTree().getScrolledList();
+			paned = new PanedLists(scrolledNotesList, scrolledTagsList);
 			packStart(button, false, false, 0);
 			packPaned();
 			if(tagsList.noTags()) {
@@ -144,30 +144,30 @@ public class NotesWindow extends Window {
 			if(tagsShown) {
 				remove(paned);
 				for(Widget widget: paned.getChildren()) {
-					if(widget.equals(notesListWindow)) {
-						paned.remove(notesListWindow);
+					if(widget.equals(scrolledNotesList)) {
+						paned.remove(scrolledNotesList);
 					}
 				}
 				showAll();
 				tagsShown = !tagsShown;
-			} else System.out.println("calling showNotesList when notesList was already added");
+			}
 		}
 
 		private void showPaned() {
 			if(!tagsShown) {
 				boolean listInPaned = false;
 				for(Widget widget: paned.getChildren()) {
-					if(widget.equals(notesListWindow)) {
+					if(widget.equals(scrolledNotesList)) {
 						listInPaned = true;
 					}
 				}
-				remove(notesListWindow);
+				remove(scrolledNotesList);
 				if(listInPaned == false) {
-					paned.add1(notesListWindow);
+					paned.add1(scrolledNotesList);
 				}
 				tagsShown = !tagsShown;
 				showAll();
-			} else System.out.println("calling showPaned when paned was already added");
+			}
 		}
 
 		private void packPaned() {
@@ -176,7 +176,7 @@ public class NotesWindow extends Window {
 		}
 
 		private void packNotesList() {
-			packEnd(notesListWindow, true, true, 0);
+			packEnd(scrolledNotesList, true, true, 0);
 			tagsShown = false;
 		}
 	}

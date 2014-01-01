@@ -1,6 +1,4 @@
 import org.gnome.gtk.*;
-import org.gnome.gdk.Pixbuf;
-import org.gnome.gdk.Event;
 import org.gnome.gdk.EventKey;
 import org.gnome.gdk.Keyval;
 import java.util.Arrays;
@@ -8,43 +6,30 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Properties extends Dialog {
+	private Widgets widgets;
 	private Note note;
-	private Notes notes;
-	private Entry tagsEntry;
-	private Button removeButton;
+	private final Notes notes = Notes.getInstance();
+
+	private TagsEntry tagsEntry;
+	private RemoveButton removeButton;
 
 	public Properties(Note note) {
+		widgets = new Widgets(this);
 		this.note = note;
-		notes = Notes.getInstance();
+
+		widgets.setIcon("properties.png");
+		widgets.destroyOnDelete();
+
+		widgets.setNameTitle(note);
 		notes.startEditing(note);
-
-		setNameTitle();
-		setPropertiesIcon();
-
-		destroyOnDelete();
-		saveOnDelete();
+		widgets.closeOnDelete(note);
 
 		add(new Label("Tags separated by comma: "));
-		tagsEntry = new Entry(tagsOutput(note.getTags()));
-		tagsEntry.connect(new Widget.KeyPressEvent() {
-			public boolean onKeyPressEvent(Widget source, EventKey event) {
-				if(event.getKeyval() == Keyval.Return) {
-					saveAndUpdate();
-					destroy();
-					return true;
-				}
-				return false;
-			}
-		});
-		removeButton = new Button("Delete note");
-		removeButton.connect(new Button.Clicked() {
-			public void onClicked(Button source) {
-				removeNote();
-				notes.updateInfo();
-				destroy();
-			}
-		});
+
+		tagsEntry = new TagsEntry(tagsOutput(note.getTags()));
 		add(tagsEntry);
+
+		removeButton = new RemoveButton();
 		add(removeButton);
 
 		addButton("Cancel", ResponseType.CANCEL);
@@ -58,8 +43,8 @@ public class Properties extends Dialog {
 					// if(tagsChanged()) {
 					// 	saveAndUpdate();
 					// }
-					saveAndUpdate();
-					destroy();
+					save();
+					updateAndDestroy();
 				}
 			}
 		});
@@ -68,47 +53,51 @@ public class Properties extends Dialog {
 		present();
 	}
 
-	private void setNameTitle() {
-		String name = note.getName();
-		if(name.equals("")) name = "Nameless";
-		setTitle(name);
+	private class TagsEntry extends Entry {
+		private TagsEntry(String tags) {
+			super(tags);
+			connect(new Widget.KeyPressEvent() {
+				public boolean onKeyPressEvent(Widget source, EventKey event) {
+					if(event.getKeyval() == Keyval.Return) {
+						save();
+						updateAndDestroy();
+						return true;
+					}
+					return false;
+				}
+			});
+		}
 	}
 
-	private void setPropertiesIcon() {
-		try {
-			Pixbuf propertiesIcon = new Pixbuf("ico/properties.png");
-			setIcon(propertiesIcon);
-		} catch(Exception ex) {ex.printStackTrace();}
-	}
-
-	private void destroyOnDelete() {
-		connect(new Window.DeleteEvent() {
-			public boolean onDeleteEvent(Widget source, Event event) {
-				source.destroy();
-				return false;
-			}
-		});
-	}
-
-	private void saveOnDelete() {
-		connect(new Widget.Destroy() {
-		    public void onDestroy(Widget source) {
-		    	notes.finishEditing(note);
-		    }
-		});
+	private class RemoveButton extends Button {
+		private RemoveButton() {
+			super("Delete note");
+			connect(new Button.Clicked() {
+				public void onClicked(Button source) {
+					removeNote();
+					updateAndDestroy();
+				}
+			});
+		}
 	}
 
 	// private boolean tagsChanged() {
 	// 	return !note.getTags().equals(tagsOutput(tagsEntry.getText()));
 	// }
 
-	private void saveAndUpdate() {
-		save();
-		notes.updateInfo();
-	}
-
 	private void save() {
 		saveTags();
+	}
+
+	private void updateAndDestroy() {
+		notes.updateInfo();
+		destroy();
+	}
+
+	private void saveTags() {
+		String tags = tagsToDB(tagsEntry.getText());
+		note.setTags(tags);
+		notes.updateNoteTags(note);
 	}
 
 	private void removeNote() {
@@ -142,11 +131,5 @@ public class Properties extends Dialog {
 			}	
 		}
 		return tags;
-	}
-
-	private void saveTags() {
-		String tags = tagsToDB(tagsEntry.getText());
-		note.setTags(tags);
-		notes.updateNoteTags(note);
 	}
 }

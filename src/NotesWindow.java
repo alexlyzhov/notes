@@ -34,7 +34,7 @@ public class NotesWindow extends Window {
 		int sh = getScreen().getHeight();
 		int w = sw * 2 / 10;
 		int h = sh * 7 / 10;
-		int x = sw / 10;
+		int x = sw / 40;
 		int y = (sh - h) / 2;
 		setDefaultSize(w, h);
 		move(x, y);
@@ -92,7 +92,7 @@ public class NotesWindow extends Window {
 	}
 
 	public void newProperties(Note note) {
-		Properties properties = new Properties(note);
+		Properties properties = new Properties(this, note);
 		addChild(properties);
 	}
 

@@ -12,6 +12,7 @@ public class Base {
 
 	private void initQueue() {
 		String absPath = "";
+		// returns the absolute path of class files (including jar directory)
 		// try {
 		// 	absPath = java.net.URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
 		// } catch(Exception ex) {ex.printStackTrace();}

@@ -44,8 +44,7 @@ public class NotesList {
 
 		private void updateName(TreeIter row) {
 			Note note = getNote(row);
-			String name = note.getName();
-			if(name.equals("")) name = "Nameless";
+			String name = note.getFilledName();
 			if(note.isEditing()) {
 				name = "<b>" + name + "</b>";
 			}

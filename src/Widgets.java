@@ -27,8 +27,7 @@ public class Widgets {
 	}
 
 	public void setNameTitle(Note note) {
-		String name = note.getName();
-		if(name.equals("")) name = "Nameless";
+		String name = note.getFilledName();
 		w.setTitle(name);
 	}
 
@@ -39,8 +38,12 @@ public class Widgets {
 		} catch(Exception ex) {ex.printStackTrace();}
 	}
 
-	public void setCenterLocation() {
-		w.setDefaultSize(w.getScreen().getWidth() / 2, w.getScreen().getHeight() / 2);
-		w.move(w.getScreen().getWidth() / 8 * 3, w.getScreen().getHeight() / 4);
+	public void placeInNotesCenter(NotesWindow notesWindow) {
+		Notes notes = Notes.getInstance();
+		int centerX = notesWindow.getPositionX() + notesWindow.getWidth() / 2;
+		int centerY = notesWindow.getPositionY() + notesWindow.getHeight() / 2;
+		int newX = centerX - w.getWidth() / 2;
+		int newY = centerY - w.getHeight() / 2;
+		w.move(newX, newY);
 	}
 }

@@ -9,12 +9,14 @@ public class Properties extends Dialog {
 	private Widgets widgets;
 	private Note note;
 	private final Notes notes = Notes.getInstance();
+	private NotesWindow notesWindow;
 
 	private TagsEntry tagsEntry;
 	private RemoveButton removeButton;
 
-	public Properties(Note note) {
+	public Properties(NotesWindow notesWindow, Note note) {
 		widgets = new Widgets(this);
+		this.notesWindow = notesWindow;
 		this.note = note;
 
 		widgets.setIcon("properties.png");
@@ -24,8 +26,10 @@ public class Properties extends Dialog {
 		notes.startEditing(note);
 		widgets.closeOnDelete(note);
 
-		add(new Label("Tags separated by comma: "));
+		add(new Label("Note name:"));
+		add(new Entry(note.getFilledName()));
 
+		add(new Label("Tags separated by comma:"));
 		tagsEntry = new TagsEntry(tagsOutput(note.getTags()));
 		add(tagsEntry);
 
@@ -50,6 +54,7 @@ public class Properties extends Dialog {
 		});
 
 		showAll();
+		widgets.placeInNotesCenter(notesWindow);
 		present();
 	}
 

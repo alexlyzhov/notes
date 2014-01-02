@@ -17,7 +17,7 @@ public class Editor extends Window {
 		this.note = note;
 
 		widgets.setIcon("edit.png");
-		widgets.setCenterLocation();
+		setCenterLocation();
 		widgets.destroyOnDelete();
 
 		updateNameTitle();
@@ -90,6 +90,11 @@ public class Editor extends Window {
 				text.grabTextFocus();
 			}
 		}
+	}
+
+	public void setCenterLocation() {
+		setDefaultSize(getScreen().getWidth() / 2, getScreen().getHeight() / 2);
+		move(getScreen().getWidth() / 8 * 2, getScreen().getHeight() / 4);
 	}
 
 	private void updateNameTitle() {

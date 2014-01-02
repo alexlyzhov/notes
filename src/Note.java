@@ -36,6 +36,14 @@ public class Note {
 	public String getName() {
 		return name;
 	}
+
+	public String getFilledName() {
+		String name = getName();
+		if(name.equals("")) {
+			name = "Nameless";
+		}
+		return name;
+	}
 	
 	public void setName(String newName) {
 		this.name = newName;

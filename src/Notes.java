@@ -29,8 +29,8 @@ public class Notes {
 		notesData = base.getNotes();
 		notesList = new NotesList();
 		tagsList = new TagsList();
-		updateTagsList();
-		window = new NotesWindow(notesList, tagsList);
+		updateLists();
+		NotesWindow.init(notesList, tagsList);
 		keys = new Keys();
 		Gtk.main();
 	}
@@ -42,7 +42,7 @@ public class Notes {
 		keys.cleanUp();
 	}
 
-	private Note newNote() {
+	public Note newNote() {
 		Note note = new Note(tagsList.getSelectedTag());
 		addNote(note);
 		return note;
@@ -52,18 +52,6 @@ public class Notes {
 		base.newNote(note, notesList);
 		notesData.add(note);
 		updateNotesList();
-	}
-
-	public void openNote(Note note) {
-		window.newEditor(note);
-	}
-
-	public void openNewNote() {
-		openNote(newNote());
-	}
-
-	public void closeNote(Note note) {
-		window.closeNoteEditor(note);
 	}
 
 	public void removeNoteAndUpdate(Note note) {
@@ -76,20 +64,20 @@ public class Notes {
 
 	public void removeNoteCompletelyAndUpdate(Note note) {
 		notesData.remove(note);
-		updateInfo();
+		updateLists();
 		base.removeNote(note);
 	}
 
 	public void removeNoteToTrashAndUpdate(Note note) {
 		note.removeToTrash();
-		updateInfo();
+		updateLists();
 		base.updateNoteTags(note);
 	}
 
-	public void updateTagsList() {
+	public void updateLists() {
 		tagsList.update(notesData);
 		if(window != null) {
-			window.updateLists();
+			window.updateListsWindowView();
 		}
 	}
 
@@ -101,13 +89,9 @@ public class Notes {
 		notesList.updateView(note);
 	}
 
-	public void updateInfo() {
-		updateTagsList();
-	}
-
 	public void updateNote(Note note) {
 		base.updateNote(note, notesList);
-		updateInfo();
+		updateLists();
 	}
 
 	public void updateNoteTags(Note note) {
@@ -126,31 +110,5 @@ public class Notes {
     	} else {
     		notesList.updateView(note);
     	}
-	}
-
-	public void invokeProperties(Note note) {
-		window.newProperties(note);
-	}
-
-	public void toggleVisible() {
-		window.toggleVisible();
-	}
-
-	public void closeCurrentNote() {
-		Editor activeEditor = window.popActiveEditor();
-		if(activeEditor != null) {
-			activeEditor.destroy();
-		}
-	}
-
-	public void removeCurrentNote() {
-		Editor activeEditor = window.popActiveEditor();
-		if(activeEditor != null) {
-			Note note = activeEditor.getNote();
-			activeEditor.destroy();
-			if(!note.empty()) {
-				removeNoteAndUpdate(note);
-			}
-		}
 	}
 }

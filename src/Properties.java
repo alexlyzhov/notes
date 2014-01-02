@@ -9,15 +9,13 @@ public class Properties extends Dialog {
 	private Widgets widgets;
 	private Note note;
 	private final Notes notes = Notes.getInstance();
-	private NotesWindow notesWindow;
 
 	private TagsEntry tagsEntry;
 	private RemoveButton removeButton;
 
-	public Properties(NotesWindow notesWindow, Note note) {
+	public Properties(Note note) {
 		hide();
 		widgets = new Widgets(this);
-		this.notesWindow = notesWindow;
 		this.note = note;
 
 		widgets.setIcon("properties.png");
@@ -55,7 +53,7 @@ public class Properties extends Dialog {
 		});
 
 		showAll();
-		widgets.placeInNotesCenter(notesWindow);
+		widgets.placeInNotesCenter();
 		present();
 	}
 
@@ -96,7 +94,7 @@ public class Properties extends Dialog {
 	}
 
 	private void updateAndDestroy() {
-		notes.updateInfo();
+		notes.updateLists();
 		destroy();
 	}
 

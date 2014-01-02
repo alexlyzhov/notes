@@ -85,17 +85,18 @@ public class NotesList {
 						Note note = model.getNote(row);
 						MouseButton b = event.getButton();
 						Notes notes = Notes.getInstance();
+						NotesWindow notesWindow = NotesWindow.getInstance();
 						if(b == MouseButton.LEFT) {
 							if(!note.isEditing()) {
-								notes.openNote(note);
+								notesWindow.openNote(note);
 							} else {
-								notes.closeNote(note);
+								notesWindow.closeNote(note);
 							}
 						} else if(!note.isEditing()) {
 							if(b == MouseButton.MIDDLE) {
 								notes.removeNoteAndUpdate(note);
 							} else if(b == MouseButton.RIGHT) {
-								notes.invokeProperties(note);
+								notesWindow.invokeProperties(note);
 							}
 						}
 					}

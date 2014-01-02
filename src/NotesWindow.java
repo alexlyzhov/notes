@@ -5,6 +5,8 @@ import java.util.*;
 import org.gnome.gdk.EventFocus;
 
 public class NotesWindow extends Window {
+	public static NotesWindow notesWindow;
+	public Notes notes;
 	private NotesVBox vbox;
 	final private NotesList notesList;
 	final private TagsList tagsList;
@@ -12,8 +14,13 @@ public class NotesWindow extends Window {
 	private boolean visible = false;
 	private Stack<Editor> activeEditors = new Stack<Editor>();
 
-	public NotesWindow(NotesList notesList, TagsList tagsList) {
+	public static void init(NotesList notesList, TagsList tagsList) {
+		notesWindow = new NotesWindow(notesList, tagsList);
+	}
+
+	private NotesWindow(NotesList notesList, TagsList tagsList) {
 		hide();
+		this.notes = Notes.getInstance();
 		this.notesList = notesList;
 		this.tagsList = tagsList;
 		setTitle("Notes");
@@ -23,6 +30,10 @@ public class NotesWindow extends Window {
 		vbox = new NotesVBox(notesList, tagsList);
 		add(vbox);
 		if(!runHidden()) toggleVisible();
+	}
+
+	public static NotesWindow getInstance() {
+		return notesWindow;
 	}
 
 	private void setSunIcon() {
@@ -84,29 +95,9 @@ public class NotesWindow extends Window {
 		}
 	}
 
-	public Editor popActiveEditor() {
-		Editor editor = null;
-		try {
-			editor = activeEditors.pop();
-		} catch(EmptyStackException ex) {}
-		return editor;
-	}
-
 	public void destroyChildren() {
 		for(Widget widget: children) {
 			widget.destroy();
-		}
-	}
-
-	public void newEditor(Note note) {
-		Editor editor = new Editor(note);
-		addChild(editor);
-	}
-
-	public void closeNoteEditor(Note note) {
-		Editor noteEditor = findEditor(note);
-		if(noteEditor != null) {
-			noteEditor.destroy();
 		}
 	}
 
@@ -121,11 +112,6 @@ public class NotesWindow extends Window {
 		return null;
 	}
 
-	public void newProperties(Note note) {
-		Properties properties = new Properties(this, note);
-		addChild(properties);
-	}
-
 	private class NewNoteButton extends Button {
 		private NewNoteButton() {
 			super("New note");
@@ -138,7 +124,7 @@ public class NotesWindow extends Window {
 
 			connect(new Button.Clicked() {
 				public void onClicked(Button button) {
-					Notes.getInstance().openNewNote();
+					openNewNote();
 				}
 			});
 		}
@@ -211,11 +197,58 @@ public class NotesWindow extends Window {
 		}
 	}
 
-	public void updateLists() {
+	public void updateListsWindowView() {
 		if(tagsList.noTags()) {
 			vbox.showNotesList();
 		} else {
 			vbox.showPaned();
+		}
+	}
+
+	public void openNote(Note note) {
+		Editor editor = new Editor(note);
+		addChild(editor);
+	}
+
+	public void openNewNote() {
+		openNote(notes.newNote());
+	}
+
+	public void closeNote(Note note) {
+		Editor noteEditor = findEditor(note);
+		if(noteEditor != null) {
+			noteEditor.destroy();
+		}
+	}
+
+	public void invokeProperties(Note note) {
+		Properties properties = new Properties(note);
+		addChild(properties);
+	}
+
+	public Editor popActiveEditor() {
+		Editor editor = null;
+		try {
+			editor = activeEditors.pop();
+		} catch(EmptyStackException ex) {}
+		return editor;
+	}
+
+	public void closeCurrentNote() {
+		Editor activeEditor = popActiveEditor();
+		if(activeEditor != null) {
+			activeEditor.destroy();
+		}
+	}
+
+	public void removeCurrentNote() {
+		Editor activeEditor = popActiveEditor();
+		if(activeEditor != null) {
+			Note note = activeEditor.getNote();
+			activeEditor.destroy();
+			if(!note.empty()) {
+				notes.removeNoteAndUpdate(note);
+			}
 		}
 	}
 }

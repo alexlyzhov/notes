@@ -38,8 +38,8 @@ public class Widgets {
 		} catch(Exception ex) {ex.printStackTrace();}
 	}
 
-	public void placeInNotesCenter(NotesWindow notesWindow) {
-		Notes notes = Notes.getInstance();
+	public void placeInNotesCenter() {
+		NotesWindow notesWindow = NotesWindow.getInstance();
 		int centerX = notesWindow.getPositionX() + notesWindow.getWidth() / 2;
 		int centerY = notesWindow.getPositionY() + notesWindow.getHeight() / 2;
 		int newX = centerX - w.getWidth() / 2;

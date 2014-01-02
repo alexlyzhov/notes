@@ -43,21 +43,22 @@ public class Keys {
 
 		public void execute() {
 			Notes notes = Notes.getInstance();
+			NotesWindow notesWindow = NotesWindow.getInstance();
 			switch(this) {
 				case LIST_ID:
-					notes.toggleVisible();
+					notesWindow.toggleVisible();
 					break;
 				case NEW_ID:
-					notes.openNewNote();
+					notesWindow.openNewNote();
 					break;
 				case EXIT_ID:
 					notes.exit();
 					break;
 				case CLOSE_ID:
-					notes.closeCurrentNote();
+					notesWindow.closeCurrentNote();
 					break;
 				case REMOVE_ID:
-					notes.removeCurrentNote();
+					notesWindow.removeCurrentNote();
 					break;
 			}
 		}

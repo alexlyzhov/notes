@@ -2,23 +2,43 @@ import jxgrabkey.*;
 import java.util.ArrayList;
 
 public class Keys {
+	private static class Call {
+		private int mask;
+		private int code;
+
+		public Call(int mask, int code) {
+			this.mask = mask;
+			this.code = code;
+		}
+
+		public int getMask() {
+			return mask;
+		}
+
+		public int getCode() {
+			return code;
+		}
+	}
+
 	private enum Key {
 		//Default hotkeys:
 		//enter on keypad to show notes list
 		//plus on keypad to create new note
 		//Alt+Shift+Q to exit the application
-		LIST_ID("list", 0, X11KeysymDefinitions.KP_ENTER),
-		NEW_ID("new", 0, X11KeysymDefinitions.KP_ADD),
-		EXIT_ID("exit", X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.Q);
+		//minus on keypad to close the active Editor window
+		//del on keypad to remove the note in the active Editor window
+		LIST_ID("list", new Call[] {new Call(0, X11KeysymDefinitions.KP_ENTER)}),
+		NEW_ID("new", new Call[] {new Call(0, X11KeysymDefinitions.KP_ADD)}),
+		EXIT_ID("exit", new Call[] {new Call(X11MaskDefinitions.X11_MOD1_MASK | X11MaskDefinitions.X11_SHIFT_MASK, X11KeysymDefinitions.Q)}),
+		CLOSE_ID("close", new Call[] {new Call(0, X11KeysymDefinitions.KP_SUBTRACT)}),
+		REMOVE_ID("remove", new Call[] {new Call(0, X11KeysymDefinitions.KP_DELETE), new Call(0, X11KeysymDefinitions.KP_DECIMAL)});
 
 		public final String name;
-		public int mask;
-		public int code;
+		public Call[] calls;
 
-		Key(String name, int mask, int code) {
+		Key(String name, Call[] calls) {
 			this.name = name;
-			this.mask = mask;
-			this.code = code;
+			this.calls = calls;
 		}
 
 		public void execute() {
@@ -33,50 +53,73 @@ public class Keys {
 				case EXIT_ID:
 					notes.exit();
 					break;
+				case CLOSE_ID:
+					notes.closeCurrentNote();
+					break;
+				case REMOVE_ID:
+					notes.removeCurrentNote();
+					break;
 			}
 		}
 	};
 
 	private JXGrabKey gk;
 	private HotkeyListener listener;
+	private ArrayList<Key> registeredKeys = new ArrayList<Key>();
 
 	public Keys() {
 		System.loadLibrary("JXGrabKey");
 		gk = JXGrabKey.getInstance();
-		int state = 0;
-		Key c = null;
-		for(Key key: Key.values()) {
-			String reply = Args.getInstance().getNamedArgument(key.name);
-			if(reply != null) {
-				int newmask, newcode;
-				try {
-					newmask = Integer.parseInt(reply.substring(0, reply.indexOf(":")));
-					newcode = Integer.parseInt(reply.substring(reply.indexOf(":") + 1, reply.length()));
-					key.mask = newmask;
-					key.code = newcode;
-				} catch(NumberFormatException ex) {ex.printStackTrace();}
-			}
-		}
 
-		for(int i = 0; i < Key.values().length; i++) {
-			try {
-				gk.registerX11Hotkey(i, Key.values()[i].mask, Key.values()[i].code);
-			} catch(HotkeyConflictException ex) {ex.printStackTrace();}
+		for(Key key: Key.values()) {
+			readCallsFromArgs(key);
+			register(key);
 		}
 
 		listener = new HotkeyListener() {
 			public void onHotkey(int id) {
-				Key.values()[id].execute();
+				registeredKeys.get(id).execute();
 			}
 		};
 		gk.addHotkeyListener(listener);
 	}
 
+	private void readCallsFromArgs(Key key) {
+		String reply = Args.getInstance().getNamedArgument(key.name);
+		if(reply != null) {
+			ArrayList<Call> newCalls = new ArrayList<Call>();
+			String[] strCalls = reply.split(",");
+			for(String strCall: strCalls) {
+				int newMask, newCode;
+				try {
+					newMask = Integer.parseInt(reply.substring(0, reply.indexOf(":")));
+					newCode = Integer.parseInt(reply.substring(reply.indexOf(":") + 1, reply.length()));
+					newCalls.add(new Call(newMask, newCode));
+				} catch(NumberFormatException ex) {ex.printStackTrace();}
+			}
+			key.calls = newCalls.toArray(new Call[newCalls.size()]);
+		}
+	}
+
+	private void register(Key key) {
+		for(Call call: key.calls) {
+			try {
+				gk.registerX11Hotkey(registeredKeys.size(), call.getMask(), call.getCode());
+				registeredKeys.add(key);
+			} catch(HotkeyConflictException ex) {
+				ex.printStackTrace();
+				registeredKeys.add(null);
+			}
+		}
+	}
+
 	public void cleanUp() {
 		new Thread() {
 			public void run() {
-				for(int i = 0; i < Key.values().length; i++) {
-					gk.unregisterHotKey(i);
+				for(int i = 0; i < registeredKeys.size(); i++) {
+					if(registeredKeys.get(i) != null) {
+						gk.unregisterHotKey(i);
+					}
 				}
 				gk.removeHotkeyListener(listener);
 				gk.cleanUp();

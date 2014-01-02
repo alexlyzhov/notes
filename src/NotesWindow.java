@@ -1,7 +1,8 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
-import java.util.ArrayList;
+import java.util.*;
+import org.gnome.gdk.EventFocus;
 
 public class NotesWindow extends Window {
 	private NotesVBox vbox;
@@ -9,8 +10,10 @@ public class NotesWindow extends Window {
 	final private TagsList tagsList;
 	private ArrayList<Widget> children = new ArrayList<Widget>();
 	private boolean visible = false;
+	private Stack<Editor> activeEditors = new Stack<Editor>();
 
 	public NotesWindow(NotesList notesList, TagsList tagsList) {
+		hide();
 		this.notesList = notesList;
 		this.tagsList = tagsList;
 		setTitle("Notes");
@@ -68,6 +71,25 @@ public class NotesWindow extends Window {
 		    	children.remove(widget);
 		    }
 		});
+		if(widget instanceof Editor) {
+			widget.connect(new Widget.FocusInEvent() {
+				public boolean onFocusInEvent(Widget source, EventFocus event) {
+					Editor curr = (Editor) source;
+					if(activeEditors.search(curr) == -1) {
+						activeEditors.push(curr);
+					}
+					return false;
+				}
+			});
+		}
+	}
+
+	public Editor popActiveEditor() {
+		Editor editor = null;
+		try {
+			editor = activeEditors.pop();
+		} catch(EmptyStackException ex) {}
+		return editor;
 	}
 
 	public void destroyChildren() {
@@ -81,14 +103,22 @@ public class NotesWindow extends Window {
 		addChild(editor);
 	}
 
-	public void closeEditor(Note note) {
+	public void closeNoteEditor(Note note) {
+		Editor noteEditor = findEditor(note);
+		if(noteEditor != null) {
+			noteEditor.destroy();
+		}
+	}
+
+	public Editor findEditor(Note note) {
 		for(Widget i: children) {
 			if(i instanceof Editor) {
 				if(((Editor)i).getNoteID() == note.getID()) {
-					((Editor)i).destroy();
+					return (Editor)i;
 				}
 			}
 		}
+		return null;
 	}
 
 	public void newProperties(Note note) {

@@ -63,27 +63,27 @@ public class Notes {
 	}
 
 	public void closeNote(Note note) {
-		window.closeEditor(note);
+		window.closeNoteEditor(note);
 	}
 
-	public void removeNote(Note note) {
+	public void removeNoteAndUpdate(Note note) {
 		if(tagsList.trashSelected()) {
-			removeNoteCompletely(note);
+			removeNoteCompletelyAndUpdate(note);
 		} else {
-			removeNoteToTrash(note);
+			removeNoteToTrashAndUpdate(note);
 		}
 	}
 
-	public void removeNoteCompletely(Note note) {
+	public void removeNoteCompletelyAndUpdate(Note note) {
 		notesData.remove(note);
-		base.removeNote(note);
 		updateInfo();
+		base.removeNote(note);
 	}
 
-	public void removeNoteToTrash(Note note) {
+	public void removeNoteToTrashAndUpdate(Note note) {
 		note.removeToTrash();
-		base.updateNoteTags(note);
 		updateInfo();
+		base.updateNoteTags(note);
 	}
 
 	public void updateTagsList() {
@@ -103,7 +103,6 @@ public class Notes {
 
 	public void updateInfo() {
 		updateTagsList();
-		updateNotesList();
 	}
 
 	public void updateNote(Note note) {
@@ -123,7 +122,7 @@ public class Notes {
 	public void finishEditing(Note note) {
 		note.finishEditing();
     	if(note.empty()) {
-    		removeNoteCompletely(note);
+    		removeNoteCompletelyAndUpdate(note);
     	} else {
     		notesList.updateView(note);
     	}
@@ -135,5 +134,23 @@ public class Notes {
 
 	public void toggleVisible() {
 		window.toggleVisible();
+	}
+
+	public void closeCurrentNote() {
+		Editor activeEditor = window.popActiveEditor();
+		if(activeEditor != null) {
+			activeEditor.destroy();
+		}
+	}
+
+	public void removeCurrentNote() {
+		Editor activeEditor = window.popActiveEditor();
+		if(activeEditor != null) {
+			Note note = activeEditor.getNote();
+			activeEditor.destroy();
+			if(!note.empty()) {
+				removeNoteAndUpdate(note);
+			}
+		}
 	}
 }

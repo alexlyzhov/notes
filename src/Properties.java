@@ -15,6 +15,7 @@ public class Properties extends Dialog {
 	private RemoveButton removeButton;
 
 	public Properties(NotesWindow notesWindow, Note note) {
+		hide();
 		widgets = new Widgets(this);
 		this.notesWindow = notesWindow;
 		this.note = note;
@@ -106,7 +107,7 @@ public class Properties extends Dialog {
 	}
 
 	private void removeNote() {
-		notes.removeNote(note);
+		notes.removeNoteAndUpdate(note);
 	}
 
 	private String tagsOutput(String tags) {

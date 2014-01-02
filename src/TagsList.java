@@ -62,8 +62,7 @@ public class TagsList {
 		}
 
 		public void addTrash() {
-			TreeIter row = appendRow();
-			setValue(row, nameColumn, "Trash");
+			addTag("Trash");
 			trashShown = true;
 		}
 
@@ -120,7 +119,7 @@ public class TagsList {
 		for(Note note: notesData) {
 			model.addNoteTags(note);
 		}
-		if(trashTagExists(notesData)) {
+		if(trashTagExists(notesData)) {//test
 			model.addTrash();
 		}
 		TreeIter selectedRow = model.getRow(selected);

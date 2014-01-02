@@ -13,6 +13,7 @@ public class Editor extends Window {
 	private EditorVBox vbox;
 
 	public Editor(Note note) {
+		hide();
 		widgets = new Widgets(this);
 		this.note = note;
 
@@ -105,13 +106,16 @@ public class Editor extends Window {
 		return (int) note.getID();
 	}
 
+	public Note getNote() {
+		return note;
+	}
+
 	private void updateNoteData() {
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
 		if(note.isUsable()) {
 			notes.updateNote(note);
 		}
-		// notes.updateNotesList(); //notesList.updateView()
 		notes.updateNoteView(note);
 	}
 }

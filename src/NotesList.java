@@ -17,7 +17,6 @@ public class NotesList {
 	}
 
 	private class NotesListModel extends ListModel {
-
 		private NotesListModel(DataColumn[] columns) {
 			super(columns);
 			setSortColumn(timeColumn, SortType.DESCENDING);
@@ -30,7 +29,7 @@ public class NotesList {
 		}
 
 		public boolean empty() {
-			if(model.getIterFirst() == null) return true;
+			if(getIterFirst() == null) return true;
 			return false;
 		}
 
@@ -94,7 +93,7 @@ public class NotesList {
 							}
 						} else if(!note.isEditing()) {
 							if(b == MouseButton.MIDDLE) {
-								notes.removeNote(note);
+								notes.removeNoteAndUpdate(note);
 							} else if(b == MouseButton.RIGHT) {
 								notes.invokeProperties(note);
 							}

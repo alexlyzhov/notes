@@ -67,7 +67,7 @@ public class Base {
 	    			st = con.prepare("INSERT INTO Notes (name, content, time, tags) VALUES (?, ?, ?, ?)");
 	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getTags());
 	    			st.step();
-	    			note.initiate(con.getLastInsertId());
+	    			note.initiate((int) con.getLastInsertId());
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;

@@ -43,9 +43,6 @@ public class Properties extends Dialog {
 				if(responseType == ResponseType.CANCEL) {
 					destroy();
 				} else if(responseType == ResponseType.OK) {
-					// if(tagsChanged()) {
-					// 	saveAndUpdate();
-					// }
 					save();
 					updateAndDestroy();
 				}
@@ -84,10 +81,6 @@ public class Properties extends Dialog {
 			});
 		}
 	}
-
-	// private boolean tagsChanged() {
-	// 	return !note.getTags().equals(tagsOutput(tagsEntry.getText()));
-	// }
 
 	private void save() {
 		saveTags();

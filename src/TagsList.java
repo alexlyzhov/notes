@@ -33,11 +33,10 @@ public class TagsList {
 					return;
 				}
 			}
+			Notes notes = Notes.getInstance();
 			for(String newTag: newTags) {
-				if(!newTag.equals("")) {
-					if(!tagExists(newTag)) {
-						addTag(newTag);
-					}
+				if((notes.getTagQuickNum(newTag) == -1) && (!newTag.equals("")) && (!tagExists(newTag))) {
+					addTag(newTag);
 				}
 			}
 		}
@@ -132,10 +131,8 @@ public class TagsList {
 
 	private boolean trashTagExists(ArrayList<Note> notesData) {
 		for(Note note: notesData) {
-			for(String tag: note.getTags().split(",")) {
-				if(tag.equals("Trash")) {
-					return true;
-				}
+			if(note.removedToTrash()) {
+				return true;
 			}
 		}
 		return false;

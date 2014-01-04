@@ -206,8 +206,10 @@ public class NotesWindow extends Window {
 	}
 
 	public void openNote(Note note) {
-		Editor editor = new Editor(note);
-		addChild(editor);
+		if(!note.isEditing()) {
+			Editor editor = new Editor(note);
+			addChild(editor);
+		}
 	}
 
 	public void openNewNote() {

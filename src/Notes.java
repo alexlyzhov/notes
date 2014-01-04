@@ -10,6 +10,7 @@ public class Notes {
 	private TagsList tagsList;
 
 	private ArrayList<Note> notesData;
+	public int[] quickIDs;
 
 	public static void main(String[] args) {
 		Gtk.init(args);
@@ -27,10 +28,12 @@ public class Notes {
 	private void init() {
 		base = new Base();
 		notesData = base.getNotes();
+		updateQuickIDs();
 		notesList = new NotesList();
 		tagsList = new TagsList();
 		updateLists();
 		NotesWindow.init(notesList, tagsList);
+		window = NotesWindow.getInstance();
 		keys = new Keys();
 		Gtk.main();
 	}
@@ -95,6 +98,7 @@ public class Notes {
 	}
 
 	public void updateNoteTags(Note note) {
+		updateQuickIDs();
 		base.updateNoteTags(note);
 	}
 
@@ -110,5 +114,65 @@ public class Notes {
     	} else {
     		notesList.updateView(note);
     	}
+	}
+
+	public void updateQuickIDs() {
+		int[] quickIDs = new int[9];
+		for(int i = 0; i <= 8; i++) {
+			quickIDs[i] = -1;
+		}
+		for(Note note: notesData) {
+			int quickNum = getNoteQuickNum(note);
+			if(quickNum != -1) {
+				quickIDs[quickNum - 1] = note.getID();
+			}
+		}
+		this.quickIDs = quickIDs;
+	}
+
+	public int getNoteQuickNum(Note note) {
+		if(note.removedToTrash()) {
+			return -1;
+		}
+		String[] tags = note.getTags().split(",");
+		for(String tag: tags) {
+			int num = getTagQuickNum(tag);
+			if(num != -1) {
+				return num;
+			}
+		}
+		return -1;
+	}
+
+	public int getTagQuickNum(String tag) {
+		if(tag.startsWith("Quick")) {
+			int result = -1;
+			try {
+				result = Integer.parseInt(tag.substring(5));
+				if((result < 1) || (result > 9)) {
+					result = -1;
+				}
+			} catch(Exception ex) {}
+			return result;
+		}
+		return -1;
+	}
+
+	public void openQuick(int num) {
+		if(quickIDs[num - 1] != -1) {
+			try {
+				Note note = findNote(quickIDs[num - 1]);
+				window.openNote(note);
+			} catch(Exception ex) {ex.printStackTrace();}
+		}
+	}
+
+	public Note findNote(int id) throws Exception {
+		for(Note note: notesData) {
+			if(note.getID() == id) {
+				return note;
+			}
+		}
+		throw new Exception();
 	}
 }

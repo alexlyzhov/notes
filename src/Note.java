@@ -3,12 +3,12 @@ public class Note {
 	private String content = "";
 	private String tags = "";
 	private String time = null;
-	private long id;
+	private int id;
 
 	private boolean usable;
 	private boolean editing;
 
-	public Note(String name, String content, String tags, long id, String time) {
+	public Note(String name, String content, String tags, int id, String time) {
 		this(tags);
 		this.name = name;
 		this.content = content;
@@ -20,7 +20,7 @@ public class Note {
 		if(tags != null) setTags(tags);
 	}
 
-	public void initiate(long id) {
+	public void initiate(int id) {
 		this.id = id;
 		usable = true;
 	}
@@ -62,7 +62,7 @@ public class Note {
 		return false;
 	}
 
-	public long getID() {
+	public int getID() {
 		if(usable) {
 			return id;
 		} else {
@@ -100,5 +100,14 @@ public class Note {
 		if(tags.equals("")) tags = "Trash";
 		else tags = tags + ",Trash";
 		setTags(tags);
+	}
+
+	public boolean removedToTrash() {
+		for(String tag: getTags().split(",")) {
+			if(tag.equals("Trash")) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

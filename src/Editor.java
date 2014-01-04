@@ -103,7 +103,7 @@ public class Editor extends Window {
 	}
 
 	public int getNoteID() {
-		return (int) note.getID();
+		return note.getID();
 	}
 
 	public Note getNote() {

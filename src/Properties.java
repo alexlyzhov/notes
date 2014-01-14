@@ -20,6 +20,7 @@ public class Properties extends Dialog {
 
 		widgets.setIcon("properties.png");
 		widgets.destroyOnDelete();
+		setTransientFor(NotesWindow.getInstance());
 
 		widgets.setNameTitle(note);
 		notes.startEditing(note);

@@ -13,6 +13,7 @@ public class NotesWindow extends Window {
 	private ArrayList<Widget> children = new ArrayList<Widget>();
 	private boolean visible = false;
 	private Stack<Editor> activeEditors = new Stack<Editor>();
+	private Widgets widgets = new Widgets(this);
 
 	public static void init(NotesList notesList, TagsList tagsList) {
 		notesWindow = new NotesWindow(notesList, tagsList);
@@ -24,7 +25,7 @@ public class NotesWindow extends Window {
 		this.notesList = notesList;
 		this.tagsList = tagsList;
 		setTitle("Notes");
-		setSunIcon();
+		widgets.setIcon("sun.png");
 		setLeftLocation();
 		hideOnDelete();
 		vbox = new NotesVBox(notesList, tagsList);
@@ -34,13 +35,6 @@ public class NotesWindow extends Window {
 
 	public static NotesWindow getInstance() {
 		return notesWindow;
-	}
-
-	private void setSunIcon() {
-		try {
-			Pixbuf sun = new Pixbuf("ico/sun.png");
-			setIcon(sun);
-		} catch(Exception ex) {ex.printStackTrace();}
 	}
 
 	private void setLeftLocation() {
@@ -118,7 +112,7 @@ public class NotesWindow extends Window {
 
 			Pixbuf edit = null;
 			try {
-				edit = new Pixbuf("ico/edit.png");
+				edit = widgets.getPixbuf("edit.png");
 			} catch(Exception ex) {ex.printStackTrace();}
 			setImage(new Image(edit));
 

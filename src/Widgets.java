@@ -1,6 +1,7 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
+import java.io.*;
 
 public class Widgets {
 	Window w;
@@ -31,11 +32,29 @@ public class Widgets {
 		w.setTitle(name);
 	}
 
-	public void setIcon(String ico) {
+	public void setIcon(String name) {
+		Pixbuf pixbuf = getPixbuf(name);
+		setIcon(pixbuf);
+	}
+
+	public void setIcon(Pixbuf pixbuf) {
+		w.setIcon(pixbuf);
+	}
+
+	public Pixbuf getPixbuf(String image) {
+		Pixbuf pixbuf = null;
 		try {
-			Pixbuf icon = new Pixbuf("ico/" + ico);
-			w.setIcon(icon);
+			InputStream inputStream = getClass().getResourceAsStream("ico/" + image);
+		    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		    for (int readBytes = inputStream.read(); readBytes >= 0; readBytes = inputStream.read()) {
+		    	outputStream.write(readBytes);
+		    }
+		    byte[] bytes = outputStream.toByteArray();
+		    inputStream.close();
+		    outputStream.close();
+			pixbuf = new Pixbuf(bytes);
 		} catch(Exception ex) {ex.printStackTrace();}
+		return pixbuf;
 	}
 
 	public void placeInNotesCenter() {

@@ -1,7 +1,6 @@
 import org.gnome.gtk.*;
 
 public abstract class ListTree extends TreeView {
-	private final DataColumnString nameColumn = new DataColumnString();
 
 	public ListTree(ListModel model) {
 		super(model);

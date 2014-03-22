@@ -10,7 +10,7 @@ public class Properties extends Dialog {
 	private Note note;
 	private final Notes notes = Notes.getInstance();
 
-	private TagsEntry tagsEntry;
+	private Entry tagsEntry, nameEntry;
 	private RemoveButton removeButton;
 
 	public Properties(Note note) {
@@ -27,11 +27,10 @@ public class Properties extends Dialog {
 		widgets.closeOnDelete(note);
 
 		add(new Label("Note name:"));
-		add(new Entry(note.getFilledName()));
+		add(nameEntry = new Entry(note.getName()));
 
 		add(new Label("Tags separated by comma:"));
-		tagsEntry = new TagsEntry(tagsOutput(note.getTags()));
-		add(tagsEntry);
+		add(tagsEntry = new Entry(tagsOutput(note.getTags())));
 
 		removeButton = new RemoveButton();
 		add(removeButton);
@@ -44,9 +43,18 @@ public class Properties extends Dialog {
 				if(responseType == ResponseType.CANCEL) {
 					destroy();
 				} else if(responseType == ResponseType.OK) {
-					save();
-					updateAndDestroy();
+					closeDialog(true);
 				}
+			}
+		});
+
+		connect(new Widget.KeyPressEvent() {
+			public boolean onKeyPressEvent(Widget source, EventKey event) {
+				if(event.getKeyval() == Keyval.Return) {
+					closeDialog(true);
+					return true;
+				}
+				return false;
 			}
 		});
 
@@ -55,51 +63,21 @@ public class Properties extends Dialog {
 		present();
 	}
 
-	private class TagsEntry extends Entry {
-		private TagsEntry(String tags) {
-			super(tags);
-			connect(new Widget.KeyPressEvent() {
-				public boolean onKeyPressEvent(Widget source, EventKey event) {
-					if(event.getKeyval() == Keyval.Return) {
-						save();
-						updateAndDestroy();
-						return true;
-					}
-					return false;
-				}
-			});
-		}
-	}
-
 	private class RemoveButton extends Button {
 		private RemoveButton() {
 			super("Delete note");
 			connect(new Button.Clicked() {
 				public void onClicked(Button source) {
 					removeNote();
-					updateAndDestroy();
+					closeDialog(false);
 				}
 			});
 		}
 	}
 
-	private void save() {
-		saveTags();
-	}
-
-	private void updateAndDestroy() {
-		notes.updateLists();
-		destroy();
-	}
-
-	private void saveTags() {
-		String tags = tagsToDB(tagsEntry.getText());
-		note.setTags(tags);
-		notes.updateNoteTags(note);
-	}
-
-	private void removeNote() {
-		notes.removeNoteAndUpdate(note);
+	private void saveName() {
+		note.setName(nameEntry.getText());
+		notes.updateNote(note);	
 	}
 
 	private String tagsOutput(String tags) {
@@ -129,5 +107,24 @@ public class Properties extends Dialog {
 			}	
 		}
 		return tags;
+	}
+
+	private void saveTags() {
+		String tags = tagsToDB(tagsEntry.getText());
+		note.setTags(tags);
+		notes.updateNoteTags(note);
+	}
+
+	private void removeNote() {
+		notes.removeNoteAndUpdate(note);
+	}
+
+	private void closeDialog(boolean saveProperties) {
+		if(saveProperties) {
+			saveTags();
+			saveName();
+		}
+		notes.updateLists();
+		destroy();
 	}
 }

@@ -106,6 +106,17 @@ public class NotesWindow extends Window {
 		return null;
 	}
 
+	public Editor findEditorById(int id) {
+		for(Widget i: children) {
+			if(i instanceof Editor) {
+				if(((Editor)i).getNoteID() == id) {
+					return (Editor)i;
+				}
+			}
+		}
+		return null;
+	}
+
 	private class NewNoteButton extends Button {
 		private NewNoteButton() {
 			super("New note");
@@ -210,11 +221,22 @@ public class NotesWindow extends Window {
 		openNote(notes.newNote());
 	}
 
-	public void closeNote(Note note) {
+	public boolean closeNote(Note note) {
 		Editor noteEditor = findEditor(note);
 		if(noteEditor != null) {
 			noteEditor.destroy();
+			return true;
 		}
+		return false;
+	}
+
+	public boolean closeNoteById(int id) {
+		Editor noteEditor = findEditorById(id);
+		if(noteEditor != null) {
+			noteEditor.destroy();
+			return true;
+		}
+		return false;
 	}
 
 	public void invokeProperties(Note note) {

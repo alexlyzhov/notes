@@ -10,7 +10,7 @@ public class Notes {
 	private TagsList tagsList;
 
 	private ArrayList<Note> notesData;
-	public int[] quickIDs;
+	public Note[] quickNotes;
 
 	public static void main(String[] args) {
 		Gtk.init(args);
@@ -46,6 +46,10 @@ public class Notes {
 	}
 
 	public Note newNote() {
+		if(tagsList.trashSelected()) {
+			tagsList.selectAllRow();
+			updateLists();
+		}
 		Note note = new Note(tagsList.getSelectedTag());
 		addNote(note);
 		return note;
@@ -94,7 +98,7 @@ public class Notes {
 	}
 
 	public void updateNote(Note note) {
-		updateQuickIDs();
+		updateQuickIDs(note);
 		notesList.updateView(note);
 		base.updateNote(note, notesList);
 		updateLists();
@@ -115,62 +119,54 @@ public class Notes {
 	}
 
 	public void updateQuickIDs() {
-		int[] quickIDs = new int[9];
+		quickNotes = new Note[9];
 		for(int i = 0; i <= 8; i++) {
-			quickIDs[i] = -1;
+			quickNotes[i] = null;
 		}
 		for(Note note: notesData) {
-			int quickNum = getNoteQuickNum(note);
-			if(quickNum != -1) {
-				quickIDs[quickNum - 1] = note.getID();
+			int quick = note.getQuick();
+			if(quick != 0) {
+				quickNotes[quick - 1] = note;
 			}
 		}
-		this.quickIDs = quickIDs;
 	}
 
-	public int getNoteQuickNum(Note note) {
-		if(note.removedToTrash()) {
-			return -1;
-		}
-		String[] tags = note.getTags().split(",");
-		for(String tag: tags) {
-			int num = getTagQuickNum(tag);
-			if(num != -1) {
-				return num;
+	public void updateQuickIDs(Note note) {
+		int quick = note.getQuick();
+		for(int i = 0; i <= 8; i++) {
+			if((quickNotes[i] != null) && (quickNotes[i].equals(note))) {
+				quickNotes[i] = null;
 			}
 		}
-		return -1;
-	}
-
-	public int getTagQuickNum(String tag) {
-		if(tag.startsWith("Quick")) {
-			int result = -1;
-			try {
-				result = Integer.parseInt(tag.substring(5));
-				if((result < 1) || (result > 9)) {
-					result = -1;
-				}
-			} catch(Exception ex) {}
-			return result;
+		if(quick != 0) {
+			quickNotes[quick - 1] = note;
 		}
-		return -1;
 	}
 
 	public void openQuick(int num) {
-		if(quickIDs[num - 1] != -1) {
-			try {
-				Note note = findNote(quickIDs[num - 1]);
+		// if(quickIDs[num - 1] != -1) {
+		// 	try {
+		// 		Note note = findNote(quickIDs[num - 1]);
+		// 		window.openNote(note);
+		// 	} catch(Exception ex) {ex.printStackTrace();}
+		// }
+		// for(Note note: notesData) {
+		// 	if(note.getQuick() == num) {
+		if(quickNotes[num - 1] != null) {
+			Note note = quickNotes[num - 1];
+			if(!window.closeNote(note)) {
 				window.openNote(note);
-			} catch(Exception ex) {ex.printStackTrace();}
-		}
-	}
-
-	public Note findNote(int id) throws Exception {
-		for(Note note: notesData) {
-			if(note.getID() == id) {
-				return note;
 			}
 		}
-		throw new Exception();
+		// break;
+		// 	}
+		// }
+	}
+
+	public void clearQuick(int num) {
+		if(quickNotes[num - 1] != null) {
+			quickNotes[num - 1].setQuick(0);
+			quickNotes[num - 1] = null;
+		}
 	}
 }

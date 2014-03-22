@@ -71,6 +71,8 @@ public class NotesList {
 	}
 
 	private class NotesListTree extends ListTree {
+		private long lastClickTime;
+
 		private NotesListTree(NotesListModel model) {
 			super(model);
 		}
@@ -79,7 +81,7 @@ public class NotesList {
 			connect(new Widget.ButtonPressEvent() {
 				public boolean onButtonPressEvent(Widget source, EventButton event) {
 					TreePath path = getPathAtPos((int) event.getX(), (int) event.getY());
-					if(path != null) {
+					if(path != null && (System.currentTimeMillis() - lastClickTime) > 10) {
 						NotesListModel model = (NotesListModel) getModel();
 						TreeIter row = model.getIter(path);
 						Note note = model.getNote(row);
@@ -99,6 +101,7 @@ public class NotesList {
 								notesWindow.invokeProperties(note);
 							}
 						}
+						lastClickTime = System.currentTimeMillis();
 					}
 					return true;
 				}
@@ -112,19 +115,6 @@ public class NotesList {
 
 	private boolean noteInTag(Note note, String tag) {
 		String[] noteTags = note.getTags().split(",");
-		if(tag == null) {
-			for(String noteTag: noteTags) {
-				if(noteTag.equals("Trash")) {
-					return false;
-				}
-			}
-		} else if(!tag.equals("Trash")) {
-			for(String noteTag: noteTags) {
-				if(noteTag.equals("Trash")) {
-					return false;
-				}
-			}
-		}
 		if(tag == null) return true;
 		for(String noteTag: noteTags) {
 			if(noteTag.equals(tag)) {
@@ -136,15 +126,25 @@ public class NotesList {
 
 	public void update(ArrayList<Note> notesData, TagsList tagsList) {
 		if(!tagsList.nothingSelected()) {
-			String tag = tagsList.getSelectedTag();
 			model.clear();
-			for(Note note: notesData) {
-				if(noteInTag(note, tag)) {
-					model.addNote(note);
+			if(tagsList.trashSelected()) {
+				for(Note note: notesData) {
+					if(note.inTrash()) {
+						model.addNote(note);
+					}
 				}
-			}
-			if(model.empty() && tag != null) {
-				tagsList.selectAllRow();
+			} else {
+				String tag = tagsList.getSelectedTag();
+				for(Note note: notesData) {
+					if(noteInTag(note, tag)) {
+						if(!note.inTrash()) {
+							model.addNote(note);
+						}
+					}
+				}
+				if(model.empty() && tag != null) {
+					tagsList.selectAllRow();
+				}
 			}
 		}
 	}

@@ -1,13 +1,15 @@
 import java.io.Serializable;
 
-public class Note implements Serializable {
+public class Note implements Serializable { //note should be connected with a Base instance and update itself in base when needed
 	private String name = "";
 	private String content = "";
 	private String tags = "";
-	private long time = 0;
-	private int id;
+	private long time;
+	private boolean trash;
+	private int quick;
 
-	private boolean usable; //remove?
+	private int id;
+	private boolean usable;
 	private transient boolean editing;
 
 	public Note(String tags) {
@@ -15,7 +17,7 @@ public class Note implements Serializable {
 		updateTime();
 	}
 
-	public void initiate(int id) {
+	public void setId(int id) {
 		this.id = id;
 		usable = true;
 	}
@@ -61,7 +63,7 @@ public class Note implements Serializable {
 		if(usable) {
 			return id;
 		} else {
-			System.out.println("ID was not set");
+			System.out.println("ID was not set. Name = " + name + ", content = " + content + ", tags = " + tags);
 			return -1;
 		}
 	}
@@ -91,18 +93,22 @@ public class Note implements Serializable {
 	}
 
 	public void removeToTrash() {
-		String tags = getTags();
-		if(tags.equals("")) tags = "Trash";
-		else tags = tags + ",Trash";
-		setTags(tags);
+		trash = true;
 	}
 
-	public boolean removedToTrash() {
-		for(String tag: getTags().split(",")) {
-			if(tag.equals("Trash")) {
-				return true;
-			}
-		}
-		return false;
+	public void recoverFromTrash() {
+		trash = false;
+	}
+
+	public boolean inTrash() {
+		return trash;
+	}
+
+	public int getQuick() { //remove getters and setters
+		return quick;
+	}
+
+	public void setQuick(int quick) {
+		this.quick = quick;
 	}
 }

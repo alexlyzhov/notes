@@ -39,7 +39,7 @@ public class Base {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 		        try {
-		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, note BLOB)");
+		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY AUTOINCREMENT, note BLOB)");
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -49,20 +49,20 @@ public class Base {
 	}
 
 	public void newNote(final Note note) {
-		queue.execute(new SQLiteJob<Object>() {
-		    protected Object job(SQLiteConnection con) {
-		        SQLiteStatement st = null;
-	    		try {
-	    			st = con.prepare("INSERT INTO Notes (note) VALUES (?)");
-	    			st.bind(1, getBytesFromNote(note));
-	    			st.step();
-	    			note.initiate((int) con.getLastInsertId());
-	    		} catch(SQLiteException ex) {ex.printStackTrace();}
-	    		finally {if(st != null) st.dispose();}
-		        return null;
-		    }
-		});
-	}
+			queue.execute(new SQLiteJob<Object>() {
+			    protected Object job(SQLiteConnection con) {
+			        SQLiteStatement st = null;
+		    		try {
+		    			st = con.prepare("INSERT INTO Notes (note) VALUES (?)");
+		    			st.bind(1, getBytesFromNote(note));
+		    			st.step();
+		    			note.setId((int) con.getLastInsertId());
+		    		} catch(SQLiteException ex) {ex.printStackTrace();}
+		    		finally {if(st != null) st.dispose();}
+			        return null;
+			    }
+			});
+		}
 
 	public void updateNote(final Note note, final NotesList notesList) {
 		queue.execute(new SQLiteJob<Object>() {

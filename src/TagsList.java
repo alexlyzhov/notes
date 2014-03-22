@@ -1,5 +1,8 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.EventButton;
+import org.gnome.gdk.MouseButton;
+import org.gnome.gdk.EventMask;
+import org.gnome.gdk.EventMotion;
 import java.util.ArrayList;
 
 public class TagsList {
@@ -8,16 +11,19 @@ public class TagsList {
 	private TagsListModel model;
 	private TagsListTree tree;
 	private TreeSelection selection;
+	private Notes notes;
 
 	private boolean trashShown;
 
 	public TagsList() {
+		notes = Notes.getInstance();
 		model = new TagsListModel(columns);
 		tree = new TagsListTree(model);
 		selection = tree.getSelection();
 	}
 
 	private class TagsListModel extends ListModel {
+		TreeIter trashRow;
 		private TagsListModel(DataColumn[] columns) {
 			super(columns);
 		}
@@ -26,17 +32,23 @@ public class TagsList {
 			return getIterFirst();
 		}
 
+		private TreeIter getTrashRow() {
+			TreeIter row = getIterFirst();
+			TreeIter clonedRow = getIterFirst();
+			while(row.iterNext()) {
+				clonedRow.iterNext();
+			};
+			return clonedRow;
+		}
+
 		private void addNoteTags(Note note) {
-			String[] newTags = note.getTags().split(",");
-			for(String newTag: newTags) {
-				if(newTag.equals("Trash")) {
-					return;
-				}
-			}
-			Notes notes = Notes.getInstance();
-			for(String newTag: newTags) {
-				if((notes.getTagQuickNum(newTag) == -1) && (!newTag.equals("")) && (!tagExists(newTag))) {
-					addTag(newTag);
+			if(!note.inTrash()) {
+				String[] newTags = note.getTags().split(",");
+				for(String newTag: newTags) {
+					if((!newTag.equals("")) && (!tagExists(newTag))) {
+					// if((notes.getTagQuickNum(newTag) == -1) && (!newTag.equals("")) && (!tagExists(newTag))) {
+						addTag(newTag);
+					}
 				}
 			}
 		}
@@ -58,11 +70,6 @@ public class TagsList {
 				}
 			}
 			return null;
-		}
-
-		public void addTrash() {
-			addTag("Trash");
-			trashShown = true;
 		}
 
 		private boolean tagExists(String tag) {
@@ -87,21 +94,46 @@ public class TagsList {
 	}
 
 	private class TagsListTree extends ListTree {
-		private TagsListModel model;
+		private long lastClickTime;
 
 		private TagsListTree(TagsListModel model) {
 			super(model);
-			this.model = model;
 		}
 
 		protected void connectToAction() {
-			getSelection().connect(new TreeSelection.Changed() {
-				public void onChanged(TreeSelection selection) {
-					if(!nothingSelected()) {
-						Notes.getInstance().updateNotesList();
+			connect(new Widget.ButtonPressEvent() {
+				public boolean onButtonPressEvent(Widget source, EventButton event) {
+					TreePath path = getPathAtPos((int) event.getX(), (int) event.getY());
+					if(path != null && (System.currentTimeMillis() - lastClickTime > 10)) {
+						TreeIter row = model.getIter(path);
+						String tag = model.getTag(row);
+						MouseButton b = event.getButton();
+						if(b == MouseButton.LEFT) {
+							selection.selectRow(row);
+							Notes.getInstance().updateNotesList();	
+						}
+						lastClickTime = System.currentTimeMillis();
 					}
+					return true;
 				}
 			});
+
+			// addEvents(EventMask.POINTER_MOTION);
+			// connect(new Widget.MotionNotifyEvent() {
+			// 	public boolean onMotionNotifyEvent(Widget source, EventMotion event) {
+			// 		int x = (int) event.getX();
+			// 		int y = (int) event.getY();
+			// 		TreePath path = getPathAtPos(x, y);
+			// 		if(path != null) {
+			// 			TreeIter row = model.getIter(path);
+			// 			if(!selection.getSelectedRows()[0].equals(path)) {
+			// 				selection.selectRow(row);
+			// 				Notes.getInstance().updateNotesList();
+			// 			}
+			// 		}
+			// 		return true;
+			// 	}
+			// });
 		}
 	}
 
@@ -112,26 +144,35 @@ public class TagsList {
 	public void update(ArrayList<Note> notesData) {
 		String selected = null;
 		if(!nothingSelected()) {
-			selected = getSelectedTag();
+			if(trashSelected()) selected = "";
+			else selected = getSelectedTag();
 		}
 		model.clear();
 		for(Note note: notesData) {
 			model.addNoteTags(note);
 		}
-		if(trashTagExists(notesData)) {//test
-			model.addTrash();
-		}
-		TreeIter selectedRow = model.getRow(selected);
-		if(selectedRow != null) {
-			selectRow(selectedRow);
+		if(trashExists(notesData)) {
+			model.addTag("Trash");
+			trashShown = true;
 		} else {
-			selectAllRow();
+			trashShown = false;
 		}
+		if(trashShown && (selected != null) && (selected.equals(""))) {
+			selectRow(model.getTrashRow());
+		} else {
+			TreeIter selectedRow = model.getRow(selected);
+			if(selectedRow != null) {
+				selectRow(selectedRow);
+			} else {
+				selectAllRow();
+			}
+		}
+		Notes.getInstance().updateNotesList();
 	}
 
-	private boolean trashTagExists(ArrayList<Note> notesData) {
+	private boolean trashExists(ArrayList<Note> notesData) {
 		for(Note note: notesData) {
-			if(note.removedToTrash()) {
+			if(note.inTrash()) {
 				return true;
 			}
 		}
@@ -144,7 +185,7 @@ public class TagsList {
 			return null;
 		}
 		if(allRowSelected()) return null;
-		TreePath[] paths = selection.getSelectedRows();
+		TreePath[] paths = selection.getSelectedRows(); //paths and iters are not stable, check to use it right away
 		return model.getTag(model.getIter(paths[0]));
 	}
 

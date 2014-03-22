@@ -13,6 +13,8 @@ public class Properties extends Dialog {
 	private Entry tagsEntry, nameEntry;
 	private RemoveButton removeButton;
 	private String originalName, originalTags;
+	private int originalQuick;
+	private ComboBoxText quickCombo;
 
 	public Properties(Note note) {
 		hide();
@@ -20,6 +22,7 @@ public class Properties extends Dialog {
 		this.note = note;
 		originalName = note.getName();
 		originalTags = note.getTags();
+		originalQuick = note.getQuick();
 
 		widgets.setIcon("properties.png");
 		widgets.destroyOnDelete();
@@ -34,6 +37,17 @@ public class Properties extends Dialog {
 
 		add(new Label("Tags separated by comma:"));
 		add(tagsEntry = new Entry(tagsOutput(note.getTags())));
+
+		HBox quickBox = new HBox(false, 0);
+		quickBox.add(new Label("Quick access slot: "));
+		quickBox.add(quickCombo = new ComboBoxText());
+		add(quickBox);
+
+		quickCombo.appendText("none");
+		for(int i = 1; i <= 9; i++) {
+			quickCombo.appendText(String.valueOf(i));
+		}
+		quickCombo.setActive(note.getQuick());
 
 		removeButton = new RemoveButton();
 		add(removeButton);
@@ -124,6 +138,14 @@ public class Properties extends Dialog {
 		}
 	}
 
+	private void saveQuick() {
+		if(originalQuick != quickCombo.getActive()) {
+			notes.clearQuick(quickCombo.getActive());
+			note.setQuick(quickCombo.getActive());
+			notes.updateNote(note);
+		}
+	}
+
 	private void removeNote() {
 		notes.removeNoteAndUpdate(note);
 	}
@@ -132,6 +154,7 @@ public class Properties extends Dialog {
 		if(saveProperties) {
 			saveTags();
 			saveName();
+			saveQuick();
 		}
 		notes.updateLists();
 		destroy();

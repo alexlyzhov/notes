@@ -1,6 +1,6 @@
 import org.gnome.gtk.*;
 
-public abstract class ListTree extends TreeView {
+public abstract class ListTree extends TreeView { //remove this class
 
 	public ListTree(ListModel model) {
 		super(model);

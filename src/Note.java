@@ -10,16 +10,9 @@ public class Note implements Serializable {
 	private boolean usable; //remove?
 	private transient boolean editing;
 
-	public Note(String name, String content, String tags, int id, long time) {
-		this(tags);
-		this.name = name;
-		this.content = content;
-		setTime(time);
-		initiate(id);
-	}
-
 	public Note(String tags) {
 		if(tags != null) setTags(tags);
+		updateTime();
 	}
 
 	public void initiate(int id) {
@@ -31,8 +24,8 @@ public class Note implements Serializable {
 		return usable;
 	}
 
-	public void setTime(long time) {
-		this.time = time;
+	public void updateTime() {
+		time = System.currentTimeMillis();
 	}
 
 	public String getName() {

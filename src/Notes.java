@@ -52,7 +52,7 @@ public class Notes {
 	}
 
 	private void addNote(Note note) {
-		base.newNote(note, notesList);
+		base.newNote(note);
 		notesData.add(note);
 		updateNotesList();
 	}
@@ -74,7 +74,8 @@ public class Notes {
 	public void removeNoteToTrashAndUpdate(Note note) {
 		note.removeToTrash();
 		updateLists();
-		base.updateNote(note, notesList, false);
+		notesList.updateView(note);
+		base.updateNote(note, notesList);
 	}
 
 	public void updateLists() {
@@ -92,9 +93,10 @@ public class Notes {
 		notesList.updateView(note);
 	}
 
-	public void updateNote(Note note, boolean updateTime) {
+	public void updateNote(Note note) {
 		updateQuickIDs();
-		base.updateNote(note, notesList, updateTime);
+		notesList.updateView(note);
+		base.updateNote(note, notesList);
 		updateLists();
 	}
 

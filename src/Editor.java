@@ -114,7 +114,8 @@ public class Editor extends Window {
 		note.setName(nameEntry.getText());
 		note.setContent(text.getText());
 		if(note.isUsable()) {
-			notes.updateNote(note, true);
+			note.updateTime();
+			notes.updateNote(note);
 		}
 		notes.updateNoteView(note);
 	}

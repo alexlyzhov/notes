@@ -12,11 +12,14 @@ public class Properties extends Dialog {
 
 	private Entry tagsEntry, nameEntry;
 	private RemoveButton removeButton;
+	private String originalName, originalTags;
 
 	public Properties(Note note) {
 		hide();
 		widgets = new Widgets(this);
 		this.note = note;
+		originalName = note.getName();
+		originalTags = note.getTags();
 
 		widgets.setIcon("properties.png");
 		widgets.destroyOnDelete();
@@ -76,8 +79,12 @@ public class Properties extends Dialog {
 	}
 
 	private void saveName() {
-		note.setName(nameEntry.getText());
-		notes.updateNote(note, true);	
+		String name = nameEntry.getText();
+		if(!originalName.equals(name)) {
+			note.setName(name);
+			note.updateTime();
+			notes.updateNote(note);
+		}
 	}
 
 	private String tagsOutput(String tags) {
@@ -111,8 +118,10 @@ public class Properties extends Dialog {
 
 	private void saveTags() {
 		String tags = tagsToDB(tagsEntry.getText());
-		note.setTags(tags);
-		notes.updateNote(note, false);
+		if(!originalTags.equals(tags)) {
+			note.setTags(tags);
+			notes.updateNote(note);
+		}
 	}
 
 	private void removeNote() {

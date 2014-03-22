@@ -74,7 +74,7 @@ public class Notes {
 	public void removeNoteToTrashAndUpdate(Note note) {
 		note.removeToTrash();
 		updateLists();
-		base.updateNoteTags(note);
+		base.updateNote(note, notesList, false);
 	}
 
 	public void updateLists() {
@@ -92,14 +92,10 @@ public class Notes {
 		notesList.updateView(note);
 	}
 
-	public void updateNote(Note note) {
-		base.updateNote(note, notesList);
-		updateLists();
-	}
-
-	public void updateNoteTags(Note note) {
+	public void updateNote(Note note, boolean updateTime) {
 		updateQuickIDs();
-		base.updateNoteTags(note);
+		base.updateNote(note, notesList, updateTime);
+		updateLists();
 	}
 
 	public void startEditing(Note note) {

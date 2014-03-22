@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class NotesList {
 	private final DataColumnString nameColumn = new DataColumnString();
-	private final DataColumnString timeColumn = new DataColumnString();
+	private final DataColumnLong timeColumn = new DataColumnLong();
 	private final DataColumnReference<Note> noteColumn = new DataColumnReference<Note>();
 	private final DataColumn[] columns = new DataColumn[] {nameColumn, timeColumn, noteColumn};
 	private NotesListModel model;
@@ -52,7 +52,7 @@ public class NotesList {
 
 		private void updateTime(TreeIter row) {
 			Note note = getNote(row);
-			String time = note.getTime();
+			long time = note.getTime();
 			setValue(row, timeColumn, time);
 		}
 

@@ -77,7 +77,7 @@ public class Properties extends Dialog {
 
 	private void saveName() {
 		note.setName(nameEntry.getText());
-		notes.updateNote(note);	
+		notes.updateNote(note, true);	
 	}
 
 	private String tagsOutput(String tags) {
@@ -112,7 +112,7 @@ public class Properties extends Dialog {
 	private void saveTags() {
 		String tags = tagsToDB(tagsEntry.getText());
 		note.setTags(tags);
-		notes.updateNoteTags(note);
+		notes.updateNote(note, false);
 	}
 
 	private void removeNote() {

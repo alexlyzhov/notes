@@ -1,14 +1,16 @@
-public class Note {
+import java.io.Serializable;
+
+public class Note implements Serializable {
 	private String name = "";
 	private String content = "";
 	private String tags = "";
-	private String time = null;
+	private long time = 0;
 	private int id;
 
-	private boolean usable;
-	private boolean editing;
+	private boolean usable; //remove?
+	private transient boolean editing;
 
-	public Note(String name, String content, String tags, int id, String time) {
+	public Note(String name, String content, String tags, int id, long time) {
 		this(tags);
 		this.name = name;
 		this.content = content;
@@ -29,7 +31,7 @@ public class Note {
 		return usable;
 	}
 
-	public void setTime(String time) {
+	public void setTime(long time) {
 		this.time = time;
 	}
 
@@ -71,7 +73,7 @@ public class Note {
 		}
 	}
 
-	public String getTime() {
+	public long getTime() {
 		return time;
 	}
 

@@ -1,5 +1,6 @@
 import com.almworks.sqlite4java.*;
 import java.util.ArrayList;
+import java.io.*;
 
 public class Base {
 	private SQLiteQueue queue;
@@ -38,7 +39,7 @@ public class Base {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 		        try {
-		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, name VARCHAR, content TEXT, time TEXT, tags TEXT)");
+		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY, note BLOB)");
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -48,68 +49,50 @@ public class Base {
 	}
 
 	public void newNote(final Note note, final NotesList notesList) {
-		queue.execute(new SQLiteJob<Object>() {
-			protected Object job(SQLiteConnection con) {
-				SQLiteStatement st = null;
-	    		try {
-	    			st = con.prepare("SELECT datetime('now')");
-	    			st.step();
-	    			note.setTime(st.columnString(0));
-	    		} catch(SQLiteException ex) {ex.printStackTrace();}
-	    		finally {if(st != null) st.dispose();}
-		        return null;
-			}
-		}).complete();
+		note.setTime(System.currentTimeMillis());
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("INSERT INTO Notes (name, content, time, tags) VALUES (?, ?, ?, ?)");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getTags());
+	    			ByteArrayOutputStream out = new ByteArrayOutputStream();
+				    ObjectOutputStream os = new ObjectOutputStream(out);
+				    os.writeObject(note);
+				    byte[] noteBytes = out.toByteArray();
+	    			st = con.prepare("INSERT INTO Notes (note) VALUES (?)");
+	    			st.bind(1, noteBytes);
 	    			st.step();
 	    			note.initiate((int) con.getLastInsertId());
-	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		} catch(SQLiteException | IOException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;
 		    }
 		    protected void jobFinished(Object nullObject) {
-		    	updateNote(note, notesList);
+		    	updateNote(note, notesList, true); //not needed
 		    }
 		});
 	}
 
-	public void updateNote(final Note note, final NotesList notesList) {
+	public void updateNote(final Note note, final NotesList notesList, boolean updateTime) { //remove the notesList parameter
+		if(updateTime) {
+			note.setTime(System.currentTimeMillis());
+		}
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("SELECT datetime('now')");
+	    			ByteArrayOutputStream out = new ByteArrayOutputStream();
+				    ObjectOutputStream os = new ObjectOutputStream(out);
+				    os.writeObject(note);
+				    byte[] noteBytes = out.toByteArray();
+	    			st = con.prepare("UPDATE Notes SET note = ? WHERE id = ?");
+	    			st.bind(1, noteBytes); st.bind(2, note.getID());
 	    			st.step();
-	    			note.setTime(st.columnString(0));
-	    			st = con.prepare("UPDATE Notes SET name = ?, content = ?, time = ? WHERE id = ?");
-	    			st.bind(1, note.getName()); st.bind(2, note.getContent()); st.bind(3, note.getTime()); st.bind(4, note.getID());
-	    			st.step();
-	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		} catch(SQLiteException | IOException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;
 		    }
 		    protected void jobFinished(Object nullObject) {
 		    	notesList.updateView(note);
-		    }
-		});
-	}
-
-	public void updateNoteTags(final Note note) {
-		queue.execute(new SQLiteJob<Object>() {
-		    protected Object job(SQLiteConnection con) {
-		        SQLiteStatement st = null;
-	    		try {
-	    			st = con.prepare("UPDATE Notes SET tags = ? WHERE id = ?");
-	    			st.bind(1, note.getTags()); st.bind(2, note.getID());
-	    			st.step();
-	    		} catch(SQLiteException ex) {ex.printStackTrace();}
-	    		finally {if(st != null) st.dispose();}
-		        return null;
 		    }
 		});
 	}
@@ -139,10 +122,14 @@ public class Base {
 			    	while(true) {
 			    		st.step();
 			    		if(st.hasRow()) {
-				    		result.add(new Note(st.columnString(1), st.columnString(2), st.columnString(4), st.columnInt(0), st.columnString(3)));
+			    			byte[] noteBytes = st.columnBlob(1);
+			    			ByteArrayInputStream in = new ByteArrayInputStream(noteBytes);
+						    ObjectInputStream is = new ObjectInputStream(in);
+						    Note note = (Note) is.readObject();
+				    		result.add(note);
 			    		} else break;
 			    	}
-			    } catch(SQLiteException ex) {ex.printStackTrace();}
+			    } catch(SQLiteException | IOException | ClassNotFoundException ex) {ex.printStackTrace();}
 			    finally {if(st != null) st.dispose();}
 			    return result;
 			}

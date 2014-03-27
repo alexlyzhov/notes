@@ -94,10 +94,11 @@ public class NotesList {
 							} else {
 								notesWindow.closeNote(note);
 							}
-						} else if(!note.isEditing()) {
-							if(b == MouseButton.MIDDLE) {
-								notes.removeNoteAndUpdate(note);
-							} else if(b == MouseButton.RIGHT) {
+						} else if(b == MouseButton.MIDDLE) {
+							notesWindow.closeNote(note);
+							notes.removeNoteAndUpdate(note);
+						} else if(b == MouseButton.RIGHT) {
+							if(!note.isEditing()) {
 								notesWindow.invokeProperties(note);
 							}
 						}

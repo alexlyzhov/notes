@@ -159,4 +159,8 @@ public class Properties extends Dialog {
 		notes.updateLists();
 		destroy();
 	}
+
+	public int getNoteID() {
+		return note.getID();
+	}
 }

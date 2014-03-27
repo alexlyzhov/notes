@@ -79,7 +79,7 @@ public class Notes {
 		note.removeToTrash();
 		updateLists();
 		notesList.updateView(note);
-		base.updateNote(note, notesList);
+		base.updateNote(note);
 	}
 
 	public void updateLists() {
@@ -100,7 +100,7 @@ public class Notes {
 	public void updateNote(Note note) {
 		updateQuickIDs(note);
 		notesList.updateView(note);
-		base.updateNote(note, notesList);
+		base.updateNote(note);
 		updateLists();
 	}
 

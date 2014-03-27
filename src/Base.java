@@ -8,7 +8,7 @@ public class Base {
 	public Base() {
 		java.util.logging.Logger.getLogger("com.almworks.sqlite4java").setLevel(java.util.logging.Level.OFF);
 		initQueue();
-		createTable();
+		createTables();
 	}
 
 	private void initQueue() {
@@ -34,12 +34,14 @@ public class Base {
 		}
 	}
 
-	private void createTable() {
+	private void createTables() {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 		        try {
 		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY AUTOINCREMENT, note BLOB)");
+		        	st.step();
+		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Groups (id INTEGER PRIMARY KEY AUTOINCREMENT, group BLOB)");
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -64,12 +66,12 @@ public class Base {
 			});
 		}
 
-	public void updateNote(final Note note, final NotesList notesList) {
+	public void updateNote(final Note note) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("UPDATE Notes SET note = ? WHERE id = ?");
+	    			st = con.prepare("UPDATE Groups SET note = ? WHERE id = ?");
 	    			st.bind(1, getBytesFromNote(note)); st.bind(2, note.getID());
 	    			st.step();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
@@ -132,6 +134,94 @@ public class Base {
 		    ObjectInputStream is = new ObjectInputStream(in);
 		    Note note = (Note) is.readObject();
 		    return note;
+		} catch(IOException | ClassNotFoundException ex) {ex.printStackTrace();}
+		return null;
+	}
+
+	public void newGroup(final Group group) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("INSERT INTO Groups (group) VALUES (?)");
+	    			st.bind(1, getBytesFromGroup(group));
+	    			st.step();
+	    			group.setId((int) con.getLastInsertId());
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		});
+	}
+
+	public void updateGroup(final Group group) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("UPDATE Notes SET group = ? WHERE id = ?");
+	    			st.bind(1, getBytesFromGroup(group)); st.bind(2, group.getID());
+	    			st.step();
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		});
+	}
+
+	public void removeGroup(final Group group) {
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+		        try {
+		        	st = con.prepare("DELETE FROM Groups WHERE id = ?");
+		        	st.bind(1, group.getID());
+		        	st.step();
+		        } catch(SQLiteException ex) {ex.printStackTrace();}
+		        finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		}).complete();		
+	}
+
+	public ArrayList<Group> getGroups() {
+		return queue.execute(new SQLiteJob<ArrayList<Group>>() {
+			protected ArrayList<Group> job(SQLiteConnection con) {
+				ArrayList<Group> result = new ArrayList<Group>();
+			    SQLiteStatement st = null;
+			    try {
+			    	st = con.prepare("SELECT * FROM Groups");
+			    	while(true) {
+			    		st.step();
+			    		if(st.hasRow()) {
+			    			byte[] groupBytes = st.columnBlob(1);
+			    			Group group = getGroupFromBytes(groupBytes);
+				    		result.add(group);
+			    		} else break;
+			    	}
+			    } catch(SQLiteException ex) {ex.printStackTrace();}
+			    finally {if(st != null) st.dispose();}
+			    return result;
+			}
+		}).complete();
+	}
+
+	public byte[] getBytesFromGroup(Group group) {
+		try {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+		    ObjectOutputStream os = new ObjectOutputStream(out);
+		    os.writeObject(group);
+		    return out.toByteArray();
+		} catch(IOException ex) {ex.printStackTrace();}
+		return null;
+	}
+
+	public Group getGroupFromBytes(byte[] groupBytes) {
+		try {
+			ByteArrayInputStream in = new ByteArrayInputStream(groupBytes);
+		    ObjectInputStream is = new ObjectInputStream(in);
+		    Group group = (Group) is.readObject();
+		    return group;
 		} catch(IOException | ClassNotFoundException ex) {ex.printStackTrace();}
 		return null;
 	}

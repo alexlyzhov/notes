@@ -106,16 +106,27 @@ public class NotesWindow extends Window {
 		return null;
 	}
 
-	public Editor findEditorById(int id) {
+	public Properties findProperties(Note note) {
 		for(Widget i: children) {
-			if(i instanceof Editor) {
-				if(((Editor)i).getNoteID() == id) {
-					return (Editor)i;
+			if(i instanceof Properties) {
+				if(((Properties)i).getNoteID() == note.getID()) {
+					return (Properties)i;
 				}
 			}
 		}
 		return null;
 	}
+
+	// public Editor findEditorById(int id) {
+	// 	for(Widget i: children) {
+	// 		if(i instanceof Editor) {
+	// 			if(((Editor)i).getNoteID() == id) {
+	// 				return (Editor)i;
+	// 			}
+	// 		}
+	// 	}
+	// 	return null;
+	// }
 
 	private class NewNoteButton extends Button {
 		private NewNoteButton() {
@@ -227,17 +238,22 @@ public class NotesWindow extends Window {
 			noteEditor.destroy();
 			return true;
 		}
-		return false;
-	}
-
-	public boolean closeNoteById(int id) {
-		Editor noteEditor = findEditorById(id);
-		if(noteEditor != null) {
-			noteEditor.destroy();
+		Properties noteProperties = findProperties(note);
+		if(noteProperties != null) {
+			noteProperties.destroy();
 			return true;
 		}
 		return false;
 	}
+
+	// public boolean closeNoteById(int id) {
+	// 	Editor noteEditor = findEditorById(id);
+	// 	if(noteEditor != null) {
+	// 		noteEditor.destroy();
+	// 		return true;
+	// 	}
+	// 	return false;
+	// }
 
 	public void invokeProperties(Note note) {
 		Properties properties = new Properties(note);

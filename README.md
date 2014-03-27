@@ -1,3 +1,5 @@
+Info below is outdated! I'll update it after a few commits.
+
 notes
 =====
 

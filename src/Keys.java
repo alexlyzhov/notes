@@ -53,23 +53,21 @@ public class Keys {
 		}
 
 		public void execute() {
-			Notes notes = Notes.getInstance();
-			NotesWindow notesWindow = NotesWindow.getInstance();
 			switch(this) {
 				case LIST_ID:
-					notesWindow.toggleVisible();
+					mainWindow.toggleVisible();
 					break;
 				case NEW_ID:
-					notesWindow.openNewNote();
+					mainWindow.openNewNote();
 					break;
 				case EXIT_ID:
-					notes.exit();
+					mainWindow.exit();
 					break;
 				case CLOSE_ID:
-					notesWindow.closeCurrentNote();
+					mainWindow.closeCurrentNote();
 					break;
 				case REMOVE_ID:
-					notesWindow.removeCurrentNote();
+					mainWindow.removeCurrentNote();
 					break;
 				default:
 					if(this.name.startsWith("quick")) {
@@ -78,7 +76,7 @@ public class Keys {
 							num = Integer.parseInt(name.substring(5));
 						} catch(Exception ex) {ex.printStackTrace();}
 						if((num >= 1) && (num <= 9)) {
-							notes.openQuick(num);
+							mainWindow.openQuick(num);
 						}
 					}
 					break;
@@ -89,13 +87,14 @@ public class Keys {
 	private JXGrabKey gk;
 	private HotkeyListener listener;
 	private ArrayList<Key> registeredKeys = new ArrayList<Key>();
+	private static MainWindow mainWindow;
 
-	public Keys() {
+	public Keys(MainWindow mainWindow) {
+		this.mainWindow = mainWindow;
 		System.loadLibrary("JXGrabKey");
 		gk = JXGrabKey.getInstance();
 
 		for(Key key: Key.values()) {
-			readCallsFromArgs(key);
 			register(key);
 		}
 
@@ -105,28 +104,6 @@ public class Keys {
 			}
 		};
 		gk.addHotkeyListener(listener);
-	}
-
-	private void readCallsFromArgs(Key key) {
-		String reply = Args.getInstance().getNamedArgument(key.name);
-		if(reply != null) {
-			ArrayList<Call> newCalls = new ArrayList<Call>();
-			String[] strCalls = reply.split(",");
-			for(String strCall: strCalls) {
-				int newMask, newCode;
-				try {
-					if(!strCall.equals("nil")) {
-						newMask = Integer.parseInt(strCall.substring(0, strCall.indexOf(":")));
-						newCode = Integer.parseInt(strCall.substring(strCall.indexOf(":") + 1, strCall.length()));
-						newCalls.add(new Call(newMask, newCode));
-					}
-				} catch(NumberFormatException ex) {ex.printStackTrace();}
-				if(strCall.equals("def")) {
-					newCalls.addAll(Arrays.asList(key.calls));
-				}
-			}
-			key.calls = newCalls.toArray(new Call[newCalls.size()]);
-		}
 	}
 
 	private void register(Key key) {
@@ -141,7 +118,11 @@ public class Keys {
 		}
 	}
 
-	public void cleanUp() {
+	public void quit() {
+		cleanUp();
+	}
+
+	private void cleanUp() {
 		new Thread() {
 			public void run() {
 				for(int i = 0; i < registeredKeys.size(); i++) {

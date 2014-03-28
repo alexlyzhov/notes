@@ -1,14 +1,16 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.EventKey;
 import org.gnome.gdk.Keyval;
+import org.gnome.gdk.Pixbuf;
+import org.gnome.gdk.Event;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.io.*;
 
 public class Properties extends Dialog {
-	private Widgets widgets;
+	private Data data;
 	private Note note;
-	private final Notes notes = Notes.getInstance();
 
 	private Entry tagsEntry, nameEntry;
 	private RemoveButton removeButton;
@@ -16,27 +18,37 @@ public class Properties extends Dialog {
 	private int originalQuick;
 	private ComboBoxText quickCombo;
 
-	public Properties(Note note) {
+	public Properties(final Note note, MainWindow mainWindow, final Data data) {
+		this.data = data;
 		hide();
-		widgets = new Widgets(this);
 		this.note = note;
-		originalName = note.getName();
-		originalTags = note.getTags();
-		originalQuick = note.getQuick();
+		originalName = note.getPureName();
+		originalTags = "";
+		originalQuick = note.quick;
 
-		widgets.setIcon("properties.png");
-		widgets.destroyOnDelete();
-		setTransientFor(NotesWindow.getInstance());
+		setIcon();
+		connect(new Window.DeleteEvent() {
+			public boolean onDeleteEvent(Widget source, Event event) {
+				source.destroy();
+				return false;
+			}
+		});
+		setTransientFor(mainWindow);
 
-		widgets.setNameTitle(note);
-		notes.startEditing(note);
-		widgets.closeOnDelete(note);
+		setTitle(note.getViewableName());
+		data.startEditing(note);
+		connect(new Window.Destroy() {
+		    public void onDestroy(Widget source) {
+		    	data.finishEditing(note);
+		    }
+		});
 
 		add(new Label("Note name:"));
-		add(nameEntry = new Entry(note.getName()));
+		add(nameEntry = new Entry(note.getPureName()));
 
 		add(new Label("Tags separated by comma:"));
-		add(tagsEntry = new Entry(tagsOutput(note.getTags())));
+		add(tagsEntry = new Entry());
+		// add(tagsEntry = new Entry(tagsOutput(note.getTags())));
 
 		HBox quickBox = new HBox(false, 0);
 		quickBox.add(new Label("Quick access slot: "));
@@ -47,7 +59,7 @@ public class Properties extends Dialog {
 		for(int i = 1; i <= 9; i++) {
 			quickCombo.appendText(String.valueOf(i));
 		}
-		quickCombo.setActive(note.getQuick());
+		quickCombo.setActive(note.quick);
 
 		removeButton = new RemoveButton();
 		add(removeButton);
@@ -76,8 +88,29 @@ public class Properties extends Dialog {
 		});
 
 		showAll();
-		widgets.placeInNotesCenter();
+		int centerX = mainWindow.getPositionX() + mainWindow.getWidth() / 2;
+		int centerY = mainWindow.getPositionY() + mainWindow.getHeight() / 2;
+		int newX = centerX - getWidth() / 2;
+		int newY = centerY - getHeight() / 2;
+		move(newX, newY);
 		present();
+	}
+
+	private void setIcon() {
+		Pixbuf pixbuf = null;
+		String name = "properties.png";
+		try {
+			InputStream inputStream = getClass().getResourceAsStream("ico/" + name);
+		    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		    for (int readBytes = inputStream.read(); readBytes >= 0; readBytes = inputStream.read()) {
+		    	outputStream.write(readBytes);
+		    }
+		    byte[] bytes = outputStream.toByteArray();
+		    inputStream.close();
+		    outputStream.close();
+			pixbuf = new Pixbuf(bytes);
+		} catch(Exception ex) {ex.printStackTrace();}
+		setIcon(pixbuf);
 	}
 
 	private class RemoveButton extends Button {
@@ -97,70 +130,32 @@ public class Properties extends Dialog {
 		if(!originalName.equals(name)) {
 			note.setName(name);
 			note.updateTime();
-			notes.updateNote(note);
-		}
-	}
-
-	private String tagsOutput(String tags) {
-		ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
-		tags = "";
-		boolean addComma = false;
-		for(String piece: pieces) {
-			if(!addComma) addComma = true;
-			else tags = tags + ", ";
-			tags = tags + piece;
-		}
-		return tags;
-	}
-
-	private String tagsToDB(String tags) {
-		ArrayList<String> pieces = new ArrayList<String>(Arrays.asList(tags.split(",")));
-		Iterator<String> iter = pieces.iterator();
-		tags = "";
-		boolean addComma = false;
-		while(iter.hasNext()) {
-			String piece = iter.next();
-			piece = piece.trim();
-			if(!piece.equals("")) {
-				if(!addComma) addComma = true;
-				else tags = tags += ",";
-				tags = tags += piece;
-			}	
-		}
-		return tags;
-	}
-
-	private void saveTags() {
-		String tags = tagsToDB(tagsEntry.getText());
-		if(!originalTags.equals(tags)) {
-			note.setTags(tags);
-			notes.updateNote(note);
+			data.updateNote(note);
 		}
 	}
 
 	private void saveQuick() {
 		if(originalQuick != quickCombo.getActive()) {
-			notes.clearQuick(quickCombo.getActive());
-			note.setQuick(quickCombo.getActive());
-			notes.updateNote(note);
+			note.quick = quickCombo.getActive();
+			data.updateNote(note);
 		}
 	}
 
 	private void removeNote() {
-		notes.removeNoteAndUpdate(note);
+		data.removeNoteAndUpdate(note);
 	}
 
 	private void closeDialog(boolean saveProperties) {
 		if(saveProperties) {
-			saveTags();
+			// saveTags();
 			saveName();
 			saveQuick();
 		}
-		notes.updateLists();
+		data.updateStores();
 		destroy();
 	}
 
 	public int getNoteID() {
-		return note.getID();
+		return note.id;
 	}
 }

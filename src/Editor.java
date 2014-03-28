@@ -1,35 +1,63 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Keyval;
 import org.gnome.gdk.EventKey;
+import org.gnome.gdk.Pixbuf;
+import org.gnome.gdk.Event;
+import java.io.*;
 import org.gnome.sourceview.*;
 
 public class Editor extends Window {
-	private Widgets widgets;
+	private Data data;
 	private Note note;
-	private final Notes notes = Notes.getInstance();
 
 	private NameEntry nameEntry;
 	private ScrolledText text;
 	private EditorVBox vbox;
 
-	public Editor(Note note) {
+	public Editor(final Note note, final Data data) {
 		hide();
-		widgets = new Widgets(this);
+		this.data = data;
 		this.note = note;
 
-		widgets.setIcon("edit.png");
+		setIcon();
 		setCenterLocation();
-		widgets.destroyOnDelete();
+		connect(new Window.DeleteEvent() {
+			public boolean onDeleteEvent(Widget source, Event event) {
+				source.destroy();
+				return false;
+			}
+		});
 
 		updateNameTitle();
-		notes.startEditing(note);
-		widgets.closeOnDelete(note);
+		data.startEditing(note);
+		connect(new Window.Destroy() {
+		    public void onDestroy(Widget source) {
+		    	data.finishEditing(note);
+		    }
+		});
 
-		nameEntry = new NameEntry(note.getName());
-		text = new ScrolledText(note.getContent());
+		nameEntry = new NameEntry(note.getPureName());
+		text = new ScrolledText(note.content);
 		vbox = new EditorVBox(nameEntry, text);
 		add(vbox);
 		showAll();
+	}
+
+	private void setIcon() {
+		Pixbuf pixbuf = null;
+		String name = "edit.png";
+		try {
+			InputStream inputStream = getClass().getResourceAsStream("ico/" + name);
+		    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		    for (int readBytes = inputStream.read(); readBytes >= 0; readBytes = inputStream.read()) {
+		    	outputStream.write(readBytes);
+		    }
+		    byte[] bytes = outputStream.toByteArray();
+		    inputStream.close();
+		    outputStream.close();
+			pixbuf = new Pixbuf(bytes);
+		} catch(Exception ex) {ex.printStackTrace();}
+		setIcon(pixbuf);
 	}
 
 	private class NameEntry extends Entry {
@@ -99,11 +127,12 @@ public class Editor extends Window {
 	}
 
 	private void updateNameTitle() {
-		widgets.setNameTitle(note);
+		String name = note.getViewableName();
+		setTitle(name);
 	}
 
 	public int getNoteID() {
-		return note.getID();
+		return note.id;
 	}
 
 	public Note getNote() {
@@ -112,11 +141,12 @@ public class Editor extends Window {
 
 	private void updateNoteData() {
 		note.setName(nameEntry.getText());
-		note.setContent(text.getText());
-		if(note.isUsable()) {
+		note.content = text.getText();
+		if(note.id != -1) {
 			note.updateTime();
-			notes.updateNote(note);
+			data.updateNote(note);
+		} else {
+			data.updateNoteView(note);
 		}
-		notes.updateNoteView(note);
 	}
 }

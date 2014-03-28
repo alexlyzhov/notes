@@ -11,6 +11,10 @@ public class Base {
 		createTables();
 	}
 
+	public void quit() {
+		closeQueue();
+	}
+
 	private void initQueue() {
 		String absPath = "";
 		// returns the absolute path of class files (including jar directory)
@@ -18,18 +22,19 @@ public class Base {
 		// 	absPath = java.net.URLDecoder.decode(getClass().getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8");
 		// } catch(Exception ex) {ex.printStackTrace();}
 		String filePath = "notes.db";
-		String tmpFilePath = Args.getInstance().getNamedArgument("db");
-		if(tmpFilePath != null) filePath = tmpFilePath;
+		// String tmpFilePath = Args.getInstance().getNamedArgument("db");
+		// if(tmpFilePath != null) filePath = tmpFilePath;
 		if(queue == null) {
 			queue = new SQLiteQueue(new java.io.File(absPath + filePath));
 		}
 		queue.start();
 	}
 
-	public void closeQueue() {
+	private void closeQueue() {
 		if(queue != null) {
 			try {	
 				queue.stop(true).join();
+				//try queue.stop(true);
 			} catch(InterruptedException ex) {ex.printStackTrace();}
 		}
 	}
@@ -39,9 +44,13 @@ public class Base {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 		        try {
+		        	// SQLParts parts = new SQLParts("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY AUTOINCREMENT, note BLOB)");
+		        	// parts.append("CREATE TABLE IF NOT EXISTS Lists (id INTEGER PRIMARY KEY AUTOINCREMENT, list BLOB)");
+		        	// st = con.prepare(parts);
+		        	// st.step();
 		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Notes (id INTEGER PRIMARY KEY AUTOINCREMENT, note BLOB)");
 		        	st.step();
-		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Groups (id INTEGER PRIMARY KEY AUTOINCREMENT, group BLOB)");
+		        	st = con.prepare("CREATE TABLE IF NOT EXISTS Lists (id INTEGER PRIMARY KEY AUTOINCREMENT, list BLOB)");
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -51,28 +60,28 @@ public class Base {
 	}
 
 	public void newNote(final Note note) {
-			queue.execute(new SQLiteJob<Object>() {
-			    protected Object job(SQLiteConnection con) {
-			        SQLiteStatement st = null;
-		    		try {
-		    			st = con.prepare("INSERT INTO Notes (note) VALUES (?)");
-		    			st.bind(1, getBytesFromNote(note));
-		    			st.step();
-		    			note.setId((int) con.getLastInsertId());
-		    		} catch(SQLiteException ex) {ex.printStackTrace();}
-		    		finally {if(st != null) st.dispose();}
-			        return null;
-			    }
-			});
-		}
+		queue.execute(new SQLiteJob<Object>() {
+		    protected Object job(SQLiteConnection con) {
+		        SQLiteStatement st = null;
+	    		try {
+	    			st = con.prepare("INSERT INTO Notes (note) VALUES (?)");
+	    			st.bind(1, getBytesFromNote(note));
+	    			st.step();
+	    			note.id = (int) con.getLastInsertId();
+	    		} catch(SQLiteException ex) {ex.printStackTrace();}
+	    		finally {if(st != null) st.dispose();}
+		        return null;
+		    }
+		});
+	}
 
 	public void updateNote(final Note note) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("UPDATE Groups SET note = ? WHERE id = ?");
-	    			st.bind(1, getBytesFromNote(note)); st.bind(2, note.getID());
+	    			st = con.prepare("UPDATE Notes SET note = ? WHERE id = ?");
+	    			st.bind(1, getBytesFromNote(note)); st.bind(2, note.id);
 	    			st.step();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
@@ -87,7 +96,7 @@ public class Base {
 		        SQLiteStatement st = null;
 		        try {
 		        	st = con.prepare("DELETE FROM Notes WHERE id = ?");
-		        	st.bind(1, note.getID());
+		        	st.bind(1, note.id);
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -138,15 +147,15 @@ public class Base {
 		return null;
 	}
 
-	public void newGroup(final Group group) {
+	public void newList(final List list) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("INSERT INTO Groups (group) VALUES (?)");
-	    			st.bind(1, getBytesFromGroup(group));
+	    			st = con.prepare("INSERT INTO Lists (list) VALUES (?)");
+	    			st.bind(1, getBytesFromList(list));
 	    			st.step();
-	    			group.setId((int) con.getLastInsertId());
+	    			list.id = (int) con.getLastInsertId();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
 		        return null;
@@ -154,13 +163,13 @@ public class Base {
 		});
 	}
 
-	public void updateGroup(final Group group) {
+	public void updateList(final List list) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 	    		try {
-	    			st = con.prepare("UPDATE Notes SET group = ? WHERE id = ?");
-	    			st.bind(1, getBytesFromGroup(group)); st.bind(2, group.getID());
+	    			st = con.prepare("UPDATE Lists SET list = ? WHERE id = ?");
+	    			st.bind(1, getBytesFromList(list)); st.bind(2, list.id);
 	    			st.step();
 	    		} catch(SQLiteException ex) {ex.printStackTrace();}
 	    		finally {if(st != null) st.dispose();}
@@ -169,13 +178,13 @@ public class Base {
 		});
 	}
 
-	public void removeGroup(final Group group) {
+	public void removeList(final List list) {
 		queue.execute(new SQLiteJob<Object>() {
 		    protected Object job(SQLiteConnection con) {
 		        SQLiteStatement st = null;
 		        try {
-		        	st = con.prepare("DELETE FROM Groups WHERE id = ?");
-		        	st.bind(1, group.getID());
+		        	st = con.prepare("DELETE FROM Lists WHERE id = ?");
+		        	st.bind(1, list.id);
 		        	st.step();
 		        } catch(SQLiteException ex) {ex.printStackTrace();}
 		        finally {if(st != null) st.dispose();}
@@ -184,19 +193,19 @@ public class Base {
 		}).complete();		
 	}
 
-	public ArrayList<Group> getGroups() {
-		return queue.execute(new SQLiteJob<ArrayList<Group>>() {
-			protected ArrayList<Group> job(SQLiteConnection con) {
-				ArrayList<Group> result = new ArrayList<Group>();
+	public ArrayList<List> getLists() {
+		return queue.execute(new SQLiteJob<ArrayList<List>>() {
+			protected ArrayList<List> job(SQLiteConnection con) {
+				ArrayList<List> result = new ArrayList<List>();
 			    SQLiteStatement st = null;
 			    try {
-			    	st = con.prepare("SELECT * FROM Groups");
+			    	st = con.prepare("SELECT * FROM Lists");
 			    	while(true) {
 			    		st.step();
 			    		if(st.hasRow()) {
 			    			byte[] groupBytes = st.columnBlob(1);
-			    			Group group = getGroupFromBytes(groupBytes);
-				    		result.add(group);
+			    			List list = getListFromBytes(groupBytes);
+				    		result.add(list);
 			    		} else break;
 			    	}
 			    } catch(SQLiteException ex) {ex.printStackTrace();}
@@ -206,22 +215,22 @@ public class Base {
 		}).complete();
 	}
 
-	public byte[] getBytesFromGroup(Group group) {
+	public byte[] getBytesFromList(List list) {
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 		    ObjectOutputStream os = new ObjectOutputStream(out);
-		    os.writeObject(group);
+		    os.writeObject(list);
 		    return out.toByteArray();
 		} catch(IOException ex) {ex.printStackTrace();}
 		return null;
 	}
 
-	public Group getGroupFromBytes(byte[] groupBytes) {
+	public List getListFromBytes(byte[] groupBytes) {
 		try {
 			ByteArrayInputStream in = new ByteArrayInputStream(groupBytes);
 		    ObjectInputStream is = new ObjectInputStream(in);
-		    Group group = (Group) is.readObject();
-		    return group;
+		    List list = (List) is.readObject();
+		    return list;
 		} catch(IOException | ClassNotFoundException ex) {ex.printStackTrace();}
 		return null;
 	}

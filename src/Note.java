@@ -1,114 +1,44 @@
 import java.io.Serializable;
 
-public class Note implements Serializable { //note should be connected with a Base instance and update itself in base when needed
+public class Note implements Serializable {
 	private String name = "";
-	private String content = "";
-	private String tags = "";
+	public String content = "";
 	private long time;
-	private boolean trash;
-	private int quick;
+	public boolean trash = false;
+	public int quick = 0;
+	public int id = -1;
+	public transient boolean editing;
 
-	private int id;
-	private boolean usable;
-	private transient boolean editing;
-
-	public Note(String tags) {
-		if(tags != null) setTags(tags);
+	public Note() {
 		updateTime();
-	}
-
-	public void setId(int id) {
-		this.id = id;
-		usable = true;
-	}
-
-	public boolean isUsable() {
-		return usable;
-	}
-
-	public void updateTime() {
-		time = System.currentTimeMillis();
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getFilledName() {
-		String name = getName();
-		if(name.equals("")) {
-			name = "Nameless";
-		}
-		return name;
 	}
 	
 	public void setName(String newName) {
 		this.name = newName;
 	}
 
-	public String getContent() {
-		return content;
+	public String getPureName() {
+		return name;
 	}
 
-	public void setContent(String newContent) {
-		this.content = newContent;
+	public String getViewableName() {
+		return (name.equals("")) ? "Nameless" : name;
 	}
 
-	public boolean empty() {
-		if(getName().equals("") && getContent().equals("")) return true;
-		return false;
+	public String getMarkdownName() {
+		return editing ? ("<b>" + getViewableName() + "</b>") : getViewableName();
 	}
 
-	public int getID() {
-		if(usable) {
-			return id;
-		} else {
-			System.out.println("ID was not set. Name = " + name + ", content = " + content + ", tags = " + tags);
-			return -1;
-		}
+	public void updateTime() {
+		time = System.currentTimeMillis();
 	}
 
 	public long getTime() {
 		return time;
 	}
 
-	public String getTags() {
-		return tags;
-	}
-
-	public void setTags(String tags) {
-		this.tags = tags;
-	} 
-
-	public void startEditing() {
-		editing = true;
-	}
-
-	public void finishEditing() {
-		editing = false;
-	}
-
-	public boolean isEditing() {
-		return editing;
-	}
-
-	public void removeToTrash() {
-		trash = true;
-	}
-
-	public void recoverFromTrash() {
-		trash = false;
-	}
-
-	public boolean inTrash() {
-		return trash;
-	}
-
-	public int getQuick() { //remove getters and setters
-		return quick;
-	}
-
-	public void setQuick(int quick) {
-		this.quick = quick;
+	public boolean empty() {
+		if(getPureName().equals("") && content.equals("")) return true;
+		return false;
 	}
 }

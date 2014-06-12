@@ -12,14 +12,16 @@ public class Properties extends Dialog {
 	private Data data;
 	private Note note;
 
+	private MainWindow mainWindow;
 	private Entry tagsEntry, nameEntry;
 	private RemoveButton removeButton;
 	private String originalName, originalTags;
 	private int originalQuick;
 	private ComboBoxText quickCombo;
 
-	public Properties(final Note note, MainWindow mainWindow, final Data data) {
+	public Properties(final Note note, final MainWindow mainWindow, final Data data) {
 		this.data = data;
+		this.mainWindow = mainWindow;
 		hide();
 		this.note = note;
 		originalName = note.getPureName();
@@ -36,10 +38,10 @@ public class Properties extends Dialog {
 		setTransientFor(mainWindow);
 
 		setTitle(note.getViewableName());
-		data.startEditing(note);
+		mainWindow.startEditing(note);
 		connect(new Window.Destroy() {
 		    public void onDestroy(Widget source) {
-		    	data.finishEditing(note);
+		    	mainWindow.finishEditing(note);
 		    }
 		});
 
@@ -130,19 +132,19 @@ public class Properties extends Dialog {
 		if(!originalName.equals(name)) {
 			note.setName(name);
 			note.updateTime();
-			data.updateNote(note);
+			mainWindow.updateNote(note);
 		}
 	}
 
 	private void saveQuick() {
 		if(originalQuick != quickCombo.getActive()) {
 			note.quick = quickCombo.getActive();
-			data.updateNote(note);
+			mainWindow.updateNote(note);
 		}
 	}
 
 	private void removeNote() {
-		data.removeNoteAndUpdate(note);
+		mainWindow.removeNoteAndUpdate(note);
 	}
 
 	private void closeDialog(boolean saveProperties) {
@@ -151,7 +153,7 @@ public class Properties extends Dialog {
 			saveName();
 			saveQuick();
 		}
-		data.updateStores();
+		mainWindow.updateStores();
 		destroy();
 	}
 

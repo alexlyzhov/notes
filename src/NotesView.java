@@ -39,7 +39,7 @@ public class NotesView extends TreeView {
 					if(note.editing) {
 						mainWindow.closeNote(note);
 					}
-					data.removeNoteAndUpdate(note);
+					mainWindow.removeNoteAndUpdate(note);
 				} else if(button == MouseButton.RIGHT) {
 					if(!note.editing) {
 						mainWindow.invokeProperties(note);

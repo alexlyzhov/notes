@@ -1,7 +1,6 @@
 import org.gnome.gtk.Gtk;
 
 public class Main {
-	private Base base;
 	private Data data;
 	private MainWindow window;
 	private Keys keys;
@@ -12,8 +11,7 @@ public class Main {
 	}
 
 	private Main() {
-		base = new Base();
-		data = new Data(base);
+		data = new Data();
 		window = new MainWindow(data);
 		keys = new Keys(window);
 		addMainShutdownHook();
@@ -26,7 +24,7 @@ public class Main {
 				keys.quit();
 				window.quit();
 				Gtk.mainQuit();
-				base.quit();
+				data.quit();
 			}
 		});
 	}

@@ -118,7 +118,7 @@ public class ListsStore extends ListStore {
 		return (getSelectedList() == generalList);
 	}
 
-	public boolean actualList(List list) {
+	public boolean actualList(List list) { //ambiguous
 		return ((list != generalList) && (list != trashList));
 	}
 }

@@ -1,17 +1,28 @@
 import java.io.Serializable;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
+@DatabaseTable(tableName = "notes")
 public class Note implements Serializable {
-	private String name = "";
-	public String content = "";
-	private long time;
-	public boolean trash = false;
-	public int quick = 0;
+	@DatabaseField(generatedId = true)
 	public int id = -1;
+	@DatabaseField(canBeNull = false)
+	private String name = "";
+	@DatabaseField(canBeNull = false)
+	public String content = "";
+	@DatabaseField
+	private long time;
+	@DatabaseField(canBeNull = false)
+	public boolean trash = false;
+	@DatabaseField(canBeNull = false)
+	public int quick = 0;
 	public transient boolean editing;
 
-	public Note() {
-		updateTime();
+	public Note(long time) {
+		this.time = time;
 	}
+
+	public Note() {}
 	
 	public void setName(String newName) {
 		this.name = newName;

@@ -10,14 +10,16 @@ public class Editor extends Window {
 	private Data data;
 	private Note note;
 
+	private MainWindow mainWindow;
 	private NameEntry nameEntry;
 	private ScrolledText text;
 	private EditorVBox vbox;
 
-	public Editor(final Note note, final Data data) {
+	public Editor(final Note note, final Data data, final MainWindow mainWindow) {
 		hide();
 		this.data = data;
 		this.note = note;
+		this.mainWindow = mainWindow;
 
 		setIcon();
 		setCenterLocation();
@@ -29,10 +31,10 @@ public class Editor extends Window {
 		});
 
 		updateNameTitle();
-		data.startEditing(note);
+		mainWindow.startEditing(note);
 		connect(new Window.Destroy() {
 		    public void onDestroy(Widget source) {
-		    	data.finishEditing(note);
+		    	mainWindow.finishEditing(note);
 		    }
 		});
 
@@ -144,9 +146,9 @@ public class Editor extends Window {
 		note.content = text.getText();
 		if(note.id != -1) {
 			note.updateTime();
-			data.updateNote(note);
+			mainWindow.updateNote(note);
 		} else {
-			data.updateNoteView(note);
+			mainWindow.updateNoteView(note);
 		}
 	}
 }

@@ -1,13 +1,13 @@
 import org.gnome.gtk.*;
 import org.gnome.gdk.Pixbuf;
 import org.gnome.gdk.Event;
-import java.util.*;
 import org.gnome.gdk.EventFocus;
+import java.util.*;
 import java.io.*;
 
 public class MainWindow extends Window {
 	private Data data;
-	private ArrayList<Widget> children = new ArrayList<Widget>();
+	private ArrayList<Widget> children = new ArrayList<Widget>(); //is it a good idea?
 	private Stack<Editor> activeEditors = new Stack<Editor>();
 	private boolean visible = false;
 	private NotesStore notesStore;
@@ -21,7 +21,6 @@ public class MainWindow extends Window {
 
 		notesStore = new NotesStore(data);
 		listsStore = new ListsStore(data, notesStore);
-		data.setStores(notesStore, listsStore);
 		notesView = new NotesView(notesStore, this, data);
 		listsView = new ListsView(listsStore);
 		listsStore.setSelection(listsView.getSelection());
@@ -201,14 +200,28 @@ public class MainWindow extends Window {
 
 	public void openNote(Note note) {
 		if(!note.editing) {
-			Editor editor = new Editor(note, data);
+			Editor editor = new Editor(note, data, this);
 			addChild(editor);
 		}
 	}
 
 	public void openNewNote() {
-		Note newNote = data.newNote(listsStore.getSelectedList());
+		Note newNote = newNote(listsStore.getSelectedList());
 		openNote(newNote);
+	}
+
+	public void updateNoteView(Note note) {
+		notesStore.updateInfo(note);
+	}
+
+	public void updateStores() {
+		notesStore.update(listsStore);
+		listsStore.update();
+	}
+
+	public void updateNote(Note note) {
+		data.updateNote(note);
+		updateStores();
 	}
 
 	public boolean closeNote(Note note) {
@@ -260,12 +273,44 @@ public class MainWindow extends Window {
 			Note note = activeEditor.getNote();
 			activeEditor.destroy();
 			if(!note.empty()) {
-				data.removeNoteAndUpdate(note);
+				removeNoteAndUpdate(note);
 			}
 		}
 	}
 
 	public void exit() {
 		Gtk.mainQuit();
+	}
+
+	public void startEditing(Note note) {
+		data.startEditing(note);
+		updateNoteView(note);
+	}
+
+	public void finishEditing(Note note) {
+		if(data.finishEditing(note)) {
+			updateNoteView(note);
+		}
+	}
+
+	public void removeNoteAndUpdate(Note note) {
+		if(listsStore.trashListSelected()) {
+			data.removeNoteCompletelyAndUpdate(note);
+		} else {
+			data.removeNoteToTrashAndUpdate(note);
+		}
+	}
+
+	public Note newNote(List list) {
+		if(listsStore.trashListSelected()) {
+			listsStore.selectGeneralList();
+			listsStore.update();
+		}
+		Note note = data.newNote();
+		if(listsStore.actualList(list)) {
+			list.notes.add(note);
+		}
+		updateStores();
+		return note;
 	}
 }

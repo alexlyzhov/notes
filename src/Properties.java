@@ -26,7 +26,7 @@ public class Properties extends Dialog {
 		this.note = note;
 		originalName = note.getPureName();
 		originalTags = "";
-		originalQuick = note.quick;
+		originalQuick = mainWindow.findSlotNumberByNote(note);
 
 		setIcon();
 		connect(new Window.DeleteEvent() {
@@ -61,7 +61,7 @@ public class Properties extends Dialog {
 		for(int i = 1; i <= 9; i++) {
 			quickCombo.appendText(String.valueOf(i));
 		}
-		quickCombo.setActive(note.quick);
+		quickCombo.setActive(originalQuick);
 
 		removeButton = new RemoveButton();
 		add(removeButton);
@@ -138,8 +138,8 @@ public class Properties extends Dialog {
 
 	private void saveQuick() {
 		if(originalQuick != quickCombo.getActive()) {
-			note.quick = quickCombo.getActive();
-			mainWindow.updateNote(note);
+			int slotNumber = quickCombo.getActive();
+			mainWindow.registerQuickSlot(note, slotNumber);
 		}
 	}
 

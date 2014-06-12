@@ -198,6 +198,14 @@ public class MainWindow extends Window {
 		return null;
 	}
 
+	public void registerQuickSlot(Note note, int slotNumber) {
+		data.registerQuickSlot(note, slotNumber);
+	}
+
+	public int findSlotNumberByNote(Note note) {
+		return data.findSlotNumberByNote(note);
+	}
+
 	public void openNote(Note note) {
 		if(!note.editing) {
 			Editor editor = new Editor(note, data, this);
@@ -222,6 +230,7 @@ public class MainWindow extends Window {
 	public void updateNote(Note note) {
 		data.updateNote(note);
 		updateStores();
+		// updateNoteView(note);
 	}
 
 	public boolean closeNote(Note note) {
@@ -251,8 +260,8 @@ public class MainWindow extends Window {
 		return editor;
 	}
 
-	public void openQuick(int num) {
-		Note note = data.getQuickNote(num);
+	public void openQuick(int slotNumber) {
+		Note note = data.findQuickNote(slotNumber);
 		if(note != null) {
 			if(!closeNote(note)) { //check if already opened by a separate method! remove boolean closeNote()
 				openNote(note);
@@ -288,9 +297,12 @@ public class MainWindow extends Window {
 	}
 
 	public void finishEditing(Note note) {
-		if(data.finishEditing(note)) {
-			updateNoteView(note);
-		}
+		data.finishEditing(note);
+		if(note.empty()) {
+    		data.removeNoteCompletelyAndUpdate(note);
+    	} else {
+    		updateNoteView(note);
+    	}
 	}
 
 	public void removeNoteAndUpdate(Note note) {

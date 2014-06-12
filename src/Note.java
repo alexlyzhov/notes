@@ -14,12 +14,10 @@ public class Note implements Serializable {
 	private long time;
 	@DatabaseField(canBeNull = false)
 	public boolean trash = false;
-	@DatabaseField(canBeNull = false)
-	public int quick = 0;
 	public transient boolean editing;
 
-	public Note(long time) {
-		this.time = time;
+	public Note(boolean blank) {
+		updateTime();
 	}
 
 	public Note() {}

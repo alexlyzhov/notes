@@ -7,6 +7,7 @@ import java.io.*;
 
 public class MainWindow extends Window {
 	private Data data;
+	private QuickAccess quickAccess;
 	private ArrayList<Widget> children = new ArrayList<Widget>(); //is it a good idea?
 	private Stack<Editor> activeEditors = new Stack<Editor>();
 	private boolean visible = false;
@@ -17,6 +18,7 @@ public class MainWindow extends Window {
 
 	public MainWindow(Data data) {
 		this.data = data;
+		this.quickAccess = data.getQuickAccess();
 		hide();
 
 		notesStore = new NotesStore(data);
@@ -198,14 +200,6 @@ public class MainWindow extends Window {
 		return null;
 	}
 
-	public void registerQuickSlot(Note note, int slotNumber) {
-		data.registerQuickSlot(note, slotNumber);
-	}
-
-	public int findSlotNumberByNote(Note note) {
-		return data.findSlotNumberByNote(note);
-	}
-
 	public void openNote(Note note) {
 		if(!note.editing) {
 			Editor editor = new Editor(note, data, this);
@@ -248,7 +242,7 @@ public class MainWindow extends Window {
 	}
 
 	public void invokeProperties(Note note) {
-		Properties properties = new Properties(note, this, data);
+		Properties properties = new Properties(note, this, quickAccess);
 		addChild(properties);
 	}
 
@@ -261,7 +255,7 @@ public class MainWindow extends Window {
 	}
 
 	public void openQuick(int slotNumber) {
-		Note note = data.findQuickNote(slotNumber);
+		Note note = quickAccess.findQuickNote(slotNumber);
 		if(note != null) {
 			if(!closeNote(note)) { //check if already opened by a separate method! remove boolean closeNote()
 				openNote(note);

@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.io.*;
 
 public class Properties extends Dialog {
-	private Data data;
+	private QuickAccess quickAccess;
 	private Note note;
 
 	private MainWindow mainWindow;
@@ -19,14 +19,14 @@ public class Properties extends Dialog {
 	private int originalQuick;
 	private ComboBoxText quickCombo;
 
-	public Properties(final Note note, final MainWindow mainWindow, final Data data) {
-		this.data = data;
+	public Properties(final Note note, final MainWindow mainWindow, final QuickAccess quickAccess) {
+		this.quickAccess = quickAccess;
 		this.mainWindow = mainWindow;
 		hide();
 		this.note = note;
 		originalName = note.getPureName();
 		originalTags = "";
-		originalQuick = mainWindow.findSlotNumberByNote(note);
+		originalQuick = quickAccess.findSlotNumberByNote(note);
 
 		setIcon();
 		connect(new Window.DeleteEvent() {
@@ -139,7 +139,7 @@ public class Properties extends Dialog {
 	private void saveQuick() {
 		if(originalQuick != quickCombo.getActive()) {
 			int slotNumber = quickCombo.getActive();
-			mainWindow.registerQuickSlot(note, slotNumber);
+			quickAccess.registerQuickSlot(note, slotNumber);
 		}
 	}
 
